@@ -18,7 +18,8 @@ datas = [
 ]
 datas += collect_data_files("googleapiclient")
 datas += collect_data_files("certifi")
-datas += collect_data_files("docx")                # python-docx templates (reading Word CVs)
+datas += collect_data_files("docx")                # python-docx templates (reading Word CVs, writing tailored CVs)
+datas += collect_data_files("fpdf")                # fpdf2 colour profile (tailored CV PDFs)
 
 # pywebview ships backends for every OS (GTK, Qt, CEF, Android): keep only this platform's (EdgeChromium/WinForms on
 # Windows, Cocoa on macOS) and the shared modules

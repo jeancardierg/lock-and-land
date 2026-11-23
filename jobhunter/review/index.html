@@ -28,6 +28,9 @@ input[type=text]{width:100%;padding:6px 8px;border-radius:6px;border:1px solid v
 #toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:9px;display:none;z-index:5;max-width:90vw}
 .reasons{display:none;gap:6px;flex-wrap:wrap;justify-content:center}.reasons.on{display:flex}
 .empty{text-align:center;padding:60px 0;color:var(--muted)}
+.cvbox{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:12px 0}.cvbox .btn{padding:6px 12px;margin:4px 6px 0 0}
+.kw{display:inline-block;border-radius:999px;padding:1px 9px;margin:2px 3px 2px 0;font-size:12.5px;background:var(--chip)}.kw.ok{color:var(--ok)}.kw.nokw{color:var(--muted);text-decoration:line-through}
+.addf label{display:block;margin:10px 0 4px;font-size:14px}.addf textarea{min-height:260px}.addf .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:720px){.addf .row{grid-template-columns:1fr}}
 main.wide{max-width:1280px}.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .filters input[type=search],.filters select,.filters input[type=number]{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .filters input[type=search]{flex:1 1 220px}.filters input[type=number]{width:90px}.filters label{font-size:13.5px;color:var(--muted);display:flex;gap:4px;align-items:center}
@@ -69,7 +72,7 @@ main{animation:jh-in .22s var(--ease) both}
 <body>
 <header>
   <h1>Lock &amp; Land</h1>
-  <nav><button id="t-review" class="on" onclick="tab('review')">To review</button><button id="t-all" onclick="tab('all')">All jobs</button><button id="t-waiting" onclick="tab('waiting')">Waiting for you</button><button onclick="jhGo('/setup')">Job criteria</button><button onclick="jhGo('/configuration')">Configuration</button></nav>
+  <nav><button id="t-review" class="on" onclick="tab('review')">To review</button><button id="t-all" onclick="tab('all')">All jobs</button><button id="t-waiting" onclick="tab('waiting')">Waiting for you</button><button id="t-add" onclick="tab('add')">Add a job</button><button onclick="jhGo('/setup')">Job criteria</button><button onclick="jhGo('/configuration')">Configuration</button></nav>
   <span class="stat" id="stat"></span>
 </header>
 <div id="toast" role="status" aria-live="polite"></div><div id="busy" aria-hidden="true"></div>
@@ -87,24 +90,44 @@ async function api(path,body){busy.go();try{const r=await fetch(path,{method:bod
 async function load(keep){const d=await api('/api/queue');Q=d;if(!keep)i=0;i=Math.min(i,Math.max(0,Q.review.length-1));
   $('#stat').textContent=`${d.review.length} to review · ${d.waiting.length} waiting · ${d.submitted_today}/${d.daily_cap} sent today`+(d.profile_missing?' · ⚠ facts profile missing: nothing can be scored (see Configuration)':d.profile_approved?'':' · profile not approved yet')+(d.workers_alive?'':' · ⚠ background work stopped: quit Lock & Land from its icon and open it again');
   $('#t-waiting').textContent=`Waiting for you (${d.waiting.length})`;render()}
-function tab(v){view=v;editing=false;for(const t of ['review','all','waiting'])$('#t-'+t).classList.toggle('on',v===t);$('#main').classList.toggle('wide',v==='all');history.replaceState(null,'','#'+v);if(v==='all'){if(!J)loadJobs();else renderAll()}else render()}
+function tab(v){view=v;editing=false;for(const t of ['review','all','waiting','add'])$('#t-'+t).classList.toggle('on',v===t);$('#main').classList.toggle('wide',v==='all');history.replaceState(null,'','#'+v);if(v==='all'){if(!J)loadJobs();else renderAll()}else if(v==='add')renderAdd();else render()}
 function letterHtml(c){if(!c.sentences.length)return esc(c.letter);let html=esc(c.letter);
   for(const s of c.sentences){if(s.kind!=='claim')continue;const t=esc(s.text.trim());const tip=esc(s.fact_ids.join(', ')+': '+s.facts.join(' | '));html=html.replace(t,`<span class="s-claim" title="${tip}">${t}</span>`)}return html}
 function issues(v){if(!v)return'';const h=(v.hard||[]).map(x=>`<li class="bad">${esc(x)}</li>`).join(''),s=(v.soft||[]).map(x=>`<li class="warn">${esc(x)}</li>`).join('');return h||s?`<ul class="issues">${h}${s}</ul>`:'<p class="ok"><small>All claims match your facts.</small></p>'}
 function answers(c){if(!c.answers||!c.answers.length)return'';return `<h3>Screening answers</h3><table><tr><th>Question</th><th>Answer</th><th></th></tr>`+c.answers.map((a,k)=>`<tr><td>${esc(a.question)}</td><td>${a.needs_jean?`<input type="text" id="ans${k}" placeholder="${esc(a.note||'your answer')}"><label><small><input type="checkbox" id="save${k}" checked> remember</small></label> <button class="btn" onclick="saveAns(${k})">Save</button>`:esc(a.answer)}</td><td><span class="src ${a.source}">${esc(a.source)}</span></td></tr>`).join('')+'</table>'}
-function render(){const m=$('#main'),bar=$('#bar');if(view==='all')return;
+function cvBox(c){const t=c.tailored_cv;
+  if(!t)return `<div class="cvbox"><b>Tailored CV</b> <small class="muted">${c.tailored_cv_error?'last try failed: '+esc(c.tailored_cv_error):'a one-page ATS CV for this ad, made only from your facts'}</small><div><button class="btn" onclick="cvAct(${c.id},'build')">Tailor CV</button></div></div>`;
+  const k=t.keywords||{},share=k.share!=null?` · ${Math.round(k.share*100)}% of the ad's keywords`:'',ch=t.checks||{};
+  const chips=(k.covered||[]).map(x=>`<span class="kw ok" title="on your CV">${esc(x)}</span>`).join('')+(k.missing||[]).map(x=>`<span class="kw nokw" title="in the ad, not on your CV (never added)">${esc(x)}</span>`).join('');
+  return `<div class="cvbox"><b>Tailored CV</b> <small class="muted">${esc(t.pdf_name)} · ${t.lang==='es'?'Spanish':'English'} · summary ${t.summary_source==='ai'?'by the local AI, checked against your facts':'made of your facts'}${share}</small>
+   ${chips?`<div style="margin-top:6px">${chips}</div>`:''}
+   ${(ch.hard||[]).length||(t.notes||[]).length?`<ul class="issues">${(ch.hard||[]).map(x=>`<li class="bad">${esc(x)}</li>`).join('')}${(t.notes||[]).map(x=>`<li class="warn">${esc(x)}</li>`).join('')}</ul>`:''}
+   <p style="margin:8px 0 4px"><small><b>${esc(t.headline)}</b><br>${esc((t.summary||[]).join(' '))}</small></p>
+   <div><button class="btn" onclick="cvAct(${c.id},'open',{what:'pdf'})">Open CV</button><button class="btn" onclick="cvAct(${c.id},'open',{what:'docx'})">Open in Word</button><button class="btn" onclick="cvAct(${c.id},'open',{what:'folder'})">Show folder</button><button class="btn" onclick="cvAct(${c.id},'build')">Build again</button></div>
+   ${c.route==='email'?`<p style="margin:8px 0 0"><small>Email attaches: <label><input type="radio" name="cvc" ${c.attachment_kind==='tailored'?'checked':''} onchange="cvAct(${c.id},'choice',{use:'tailored'})"> tailored CV</label> <label><input type="radio" name="cvc" ${c.attachment_kind==='standard'?'checked':''} onchange="cvAct(${c.id},'choice',{use:'standard'})"> my standard CV</label></small></p>`:''}</div>`}
+async function cvAct(id,what,body={}){try{const d=await api(`/api/jobs/${id}/cv/${what}`,body);toast(d.done||'Done');if(what!=='open')await load(true)}catch(e){toast(e.message,6000)}}
+function renderAdd(){const m=$('#main');$('#bar').innerHTML='';
+  m.innerHTML=`<div class="card addf"><h2>Add a job from its ad</h2><p class="muted"><small>For ads Lock &amp; Land can't fetch: sites behind a sign-up wall (Jobleads and similar), a recruiter's message, a PDF. Paste the whole ad. It is scored, then a letter is written for it whatever the score, and it shows under To review.</small></p>
+   <div class="row"><div><label for="a-title">Job title *</label><input type="text" id="a-title"></div><div><label for="a-company">Company</label><input type="text" id="a-company"></div></div>
+   <div class="row"><div><label for="a-loc">Location</label><input type="text" id="a-loc" placeholder="e.g. Barcelona, hybrid"></div><div><label for="a-url">Link to the ad</label><input type="text" id="a-url" placeholder="https://…"></div></div>
+   <label for="a-email">Apply by email to (only if the ad says so)</label><input type="text" id="a-email">
+   <label><input type="checkbox" id="a-cv" checked> Tailor my CV too</label>
+   <label for="a-text">The ad text *</label><textarea id="a-text" placeholder="Paste the full ad: duties, requirements, nice to have…"></textarea>
+   <p><button class="btn go" style="background:var(--acc);color:#fff;border-color:var(--acc)" onclick="addJob()">Add and write the letter</button></p></div>`}
+async function addJob(){const v=id=>$(id).value.trim();try{const d=await api('/api/jobs/add',{title:v('#a-title'),company:v('#a-company'),location:v('#a-loc'),url:v('#a-url'),apply_email:v('#a-email'),tailor_cv:$('#a-cv').checked,text:$('#a-text').value});toast(d.done,7000);renderAdd();J=null}catch(e){toast(e.message,6000)}}
+function render(){const m=$('#main'),bar=$('#bar');if(view==='all'||view==='add')return;  // Add a job keeps what you typed through the 30 s refresh
   if(view==='waiting'){bar.innerHTML='';if(!Q.waiting.length){m.innerHTML='<div class="empty">Nothing is waiting for you.</div>';return}
     m.innerHTML=Q.waiting.map(c=>{const msg=c.route==='email'?'Approved, but the email was not sent. Open Configuration to check Gmail, or apply on the site instead.':c.url?'Apply on the site in your usual browser: paste the letter (and any screening answers), send it there, then press I applied.':'Apply the way the ad says, then press I applied.';
       return `<div class="card"><h2>${esc(c.title)}</h2><div class="pills"><span class="pill">${esc(c.company||'—')}</span><span class="pill">${esc(c.ats||(c.route==='web'?'apply on the site':c.route))}</span><span class="pill warn">apply now</span></div><p>${msg}</p>
-      ${c.url?`<button class="btn go" onclick="window.open(${jsq(c.url)},'_blank')">Open in my usual browser</button> `:''}<button class="btn" onclick="copyLetter(${c.id})">Copy letter${c.answers&&c.answers.length?' and answers':''}</button> <button class="btn" onclick="act(${c.id},'submitted')">I applied</button> <button class="btn" onclick="act(${c.id},'reject',{reason:'gave up'})">Drop it</button></div>`}).join('')+'<div id="accts"></div>';loadAccounts();return}
+      ${c.url?`<button class="btn go" onclick="window.open(${jsq(c.url)},'_blank')">Open in my usual browser</button> `:''}<button class="btn" onclick="copyLetter(${c.id})">Copy letter${c.answers&&c.answers.length?' and answers':''}</button> ${c.tailored_cv?`<button class="btn" onclick="cvAct(${c.id},'open',{what:'pdf'})">Open CV</button> <button class="btn" onclick="cvAct(${c.id},'open',{what:'folder'})">Show CV folder</button> `:`<button class="btn" onclick="cvAct(${c.id},'build')">Tailor CV</button> `} <button class="btn" onclick="act(${c.id},'submitted')">I applied</button> <button class="btn" onclick="act(${c.id},'reject',{reason:'gave up'})">Drop it</button></div>`}).join('')+'<div id="accts"></div>';loadAccounts();return}
   if(!Q.review.length){m.innerHTML='<div class="empty">Nothing to review. New letters arrive after each run.</div>';bar.innerHTML='';return}
   const c=Q.review[i],v=c.validation||{},sc=v.score??'—';
   m.innerHTML=`<div class="card"><div class="muted"><small>${i+1} of ${Q.review.length}</small></div><h2>${esc(c.title)}</h2>
    <div class="pills"><span class="pill">${esc(c.company||'—')}</span><span class="pill">${esc(c.location||'')}${c.remote?' · remote':''}</span><span class="pill">fit ${c.score??'—'}</span><span class="pill">${c.coverage!=null?Math.round(c.coverage*100)+'% of must-haves':''}</span><span class="pill ${sc>=85?'ok':sc>=70?'warn':'bad'}">checks ${sc}</span><span class="pill">${esc(c.route==='web'?(c.ats||'apply on the site'):c.route)}</span>${c.edited?'<span class="pill warn">edited</span>':''}</div>
    <div class="grid"><div><b>Why it fits</b><ul>${(c.reasons||[]).map(r=>`<li>${esc(r)}</li>`).join('')||'<li class="muted">—</li>'}</ul>${c.gaps.length?`<b>You don't have</b><ul>${c.gaps.map(g=>`<li class="muted">${esc(g)}</li>`).join('')}</ul>`:''}</div>
-   <div><b>Checks</b>${issues(v)}${c.route==='email'?`<p><small>To <b>${esc(c.recipient||c.recipient_problem)}</b> · ${esc(c.attachment)}${c.attachment_problem?` <span class="bad">${esc(c.attachment_problem)}</span>`:''}</small></p>`:''}${c.url?`<p><small><a href="${esc(c.url)}" target="_blank" rel="noopener">Open the ad</a></small></p>`:''}</div></div>
+   <div><b>Checks</b>${issues(v)}${c.route==='email'?`<p><small>To <b>${esc(c.recipient||c.recipient_problem)}</b> · ${esc(c.attachment)}${c.attachment_kind==='tailored'?' (tailored)':''}${c.attachment_problem?` <span class="bad">${esc(c.attachment_problem)}</span>`:''}</small></p>`:''}${c.url?`<p><small><a href="${esc(c.url)}" target="_blank" rel="noopener">Open the ad</a></small></p>`:''}</div></div>
    ${editing?`<textarea id="ed">${esc(c.letter)}</textarea>`:`<div class="letter">${letterHtml(c)}</div>`}
-   ${answers(c)}</div>`;
+   ${cvBox(c)}${answers(c)}</div>`;
   if(c.id!==shownId){m.firstElementChild.classList.add('enter');shownId=c.id}
   bar.innerHTML=editing?`<button class="go" onclick="saveEdit()">Save and recheck<kbd>Ctrl+Enter</kbd></button><button onclick="editing=false;render()">Cancel<kbd>Esc</kbd></button>`:
    `<button class="go" onclick="approve()">${c.route==='email'?'Approve &amp; send':'Approve &amp; apply'}<kbd>A</kbd></button><button onclick="editing=true;render();$('#ed').focus()">Edit<kbd>E</kbd></button><button onclick="showReasons()">Reject<kbd>R</kbd></button><button onclick="act(c_id(),'redraft')">Redraft<kbd>D</kbd></button><button onclick="move(-1)">Prev<kbd>K</kbd></button><button onclick="move(1)">Next<kbd>J</kbd></button>
@@ -195,7 +218,7 @@ document.addEventListener('keydown',e=>{if(view!=='review')return;const typing=[
   const r=$('#reasons'),k=e.key.toLowerCase();if(r&&r.classList.contains('on')&&/^[1-9]$/.test(e.key)){const reason=Q.reasons[+e.key-1];if(reason)reject(reason);return}
   if(k==='a')approve();else if(k==='e'){editing=true;render();$('#ed').focus();e.preventDefault()}else if(k==='r')showReasons();else if(k==='j')move(1);else if(k==='k')move(-1);else if(k==='d')act(c_id(),'redraft');else if(e.key==='Escape'&&r)r.classList.remove('on')});
 load();setInterval(()=>{if(!editing&&document.visibilityState==='visible'){load(true);if(view==='all')loadJobs()}},30000);
-const HASH=window.JH_HASH||location.hash;if(['#waiting','#all'].includes(HASH))tab(HASH.slice(1));
+const HASH=window.JH_HASH||location.hash;if(['#waiting','#all','#add'].includes(HASH))tab(HASH.slice(1));
 </script>
 </body>
 </html>

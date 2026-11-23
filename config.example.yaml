@@ -149,6 +149,17 @@ grounding:
   entailment: true      # 7B second opinion on each claim (soft: lowers the score, never blocks alone)
   words: [150, 240]
 
+# Tailored CV: a one-page ATS CV (DOCX + PDF) for one ad, built only from your facts profile. On demand: press
+# Tailor CV on a job, or keep "Tailor my CV too" ticked when you paste an ad. Files go to applications/<job id>/.
+tailored_cv:
+  enabled: true
+  auto: false           # true = also build one with every letter
+  ai_summary: true      # the local AI writes the 2-3 sentence summary (checked like letters); false = your facts as written
+  attach: true          # once built, email applications attach the tailored PDF (each card can switch back)
+  max_skills: 20
+  bullets_current: 6    # achievements listed under your current job
+  bullets_other: 4      # under each earlier job
+
 preferences:
   # Remote is the ideal, hybrid in Barcelona is fine, fully on-site only if the pay is high enough.
   remote_bonus: 5               # points added to remote jobs

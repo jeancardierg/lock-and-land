@@ -113,12 +113,33 @@ The **Configuration** page has a **Getting started** list that ticks each step o
 After that the app searches every few hours by itself. Open it from the icon, read the jobs and letters, and
 approve, edit or skip each one.
 
+### A CV tailored to one ad
+
+On any letter card, press **Tailor CV**. You get a one-page CV for that ad, as a PDF and a Word file, in English or
+Spanish to match the ad. It is built only from your facts profile: your real job titles, employers and MM/YYYY
+dates, your verified skills (the ones the ad names first), your achievements word for word (the ones closest to the
+ad first) and a 2 to 3 sentence summary the local AI writes and the fact checker checks. The layout is the one
+applicant tracking systems read best: one column, standard headings (Professional Summary, Skills, Work Experience,
+Education, Languages), no tables, columns or pictures.
+
+The card shows which of the ad's keywords the CV has (green) and which it doesn't (struck through). Missing ones
+are never added: if you do have that experience, add it to your facts profile and press **Build again**. Email
+applications attach the tailored PDF (switch back to your standard CV on the card); for web applications use
+**Open CV** on the Waiting tab and upload it on the site.
+
+### Adding a job yourself
+
+Some job sites hide ads behind a sign-up wall, and some jobs reach you by message. Open **Add a job**, paste the
+whole ad with its title (company, location and link are optional) and press **Add and write the letter**. It is
+scored like any other job, a letter is written whatever the score and, with **Tailor my CV too** ticked, a tailored
+CV as well. It shows under **To review**.
+
 ## Where your data lives
 
 | What | Where |
 |---|---|
 | Passwords and keys (Gmail app password, Telegram token, source keys, database key) | Windows Credential Manager or macOS Keychain, service `jobhunter` |
-| Settings (`config.yaml`), CV, facts profile, letters, logs | The data folder: `%LOCALAPPDATA%\jobhunter` on Windows (you can move it on Configuration → Data folder), `~/Library/Application Support/jobhunter` on macOS |
+| Settings (`config.yaml`), CV, facts profile, letters, tailored CVs (`applications/`), logs | The data folder: `%LOCALAPPDATA%\jobhunter` on Windows (you can move it on Configuration → Data folder), `~/Library/Application Support/jobhunter` on macOS |
 | Jobs database | The data folder, encrypted with SQLCipher (AES-256) |
 
 None of this is ever uploaded anywhere. Don't put the data folder in a public or shared sync folder.

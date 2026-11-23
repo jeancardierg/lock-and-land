@@ -39,6 +39,8 @@ class Script:
 
     def structured(self, cfg, system, prompt, schema, *, task="extractor", temperature=0.0, num_ctx=None, images=None):
         self.calls.append({"task": task, "system": system, "prompt": prompt, "schema": schema})
+        if task == "writer" and "sentences" in schema.get("properties", {}):
+            task = "cv_summary"   # the tailored CV's summary: its own queue, so letters keep theirs
         q = self.queue.get(task) or []
         if not q:
             if task == "checker" and "results" in schema.get("properties", {}):

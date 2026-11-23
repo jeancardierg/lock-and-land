@@ -119,7 +119,9 @@ def card(db: DB, job, cfg: dict) -> dict:
     validation = _j(app_row["validation_json"]) if app_row else {}
     retrieval = _j(app_row["retrieval_json"]) if app_row else {}
     variant = notes.get("cv_variant", "main")
-    att = cv_attachment(cfg, variant)
+    tcv = tailored(notes)
+    use_tailored = bool(tcv) and notes.get("cv_choice", "tailored" if _attach_tailored(cfg) else "standard") == "tailored"
+    att = Path(tcv["pdf"]) if use_tailored else cv_attachment(cfg, variant)
     r = route(job)
     out = {
         "id": job["id"], "title": job["title"], "company": job["company"], "location": job["location"],
@@ -132,6 +134,8 @@ def card(db: DB, job, cfg: dict) -> dict:
         "answers": _j(app_row["answers_json"]) if app_row else [], "edited": bool(app_row and app_row["edited_by_jean"]),
         "attachment": att.name, "attachment_problem": attachment_problem(att), "cv_variant": variant,
         "application_id": app_row["id"] if app_row else None,
+        "attachment_path": str(att), "attachment_kind": "tailored" if use_tailored else "standard",
+        "tailored_cv": _cv_card(tcv), "tailored_cv_error": notes.get("tailored_cv_error"),
     }
     if r == "email":
         try:
@@ -139,6 +143,29 @@ def card(db: DB, job, cfg: dict) -> dict:
         except gmail.SendBlocked as e:
             out["recipient_problem"] = str(e)
     return out
+
+
+def tailored(notes: dict) -> dict | None:
+    """The job's tailored CV from its notes, if its PDF is still on disk."""
+    t = (notes or {}).get("tailored_cv")
+    if isinstance(t, dict) and t.get("pdf") and Path(t["pdf"]).exists():
+        return t
+    return None
+
+
+def _attach_tailored(cfg: dict) -> bool:
+    from ..tailored_cv import _ccfg
+    return bool(_ccfg(cfg)["attach"])
+
+
+def _cv_card(t: dict | None) -> dict | None:
+    if not t:
+        return None
+    cv = t.get("cv") or {}
+    return {"pdf_name": Path(t["pdf"]).name, "lang": t.get("lang"), "summary_source": t.get("summary_source"),
+            "keywords": t.get("keywords") or {}, "checks": t.get("checks") or {}, "notes": t.get("notes") or [],
+            "headline": cv.get("headline", ""), "summary": cv.get("summary", []), "skills": cv.get("skills", []),
+            "roles": cv.get("roles", [])}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -260,7 +287,7 @@ def approve(job_id: int, body: dict = Body(default={})) -> dict:
             db.move(job_id, "submitting", actor="jean", reason="sending email")
             try:
                 gmail.send(c["recipient"], c["subject"] or f"Application: {job['title']}", c["letter"],
-                           cfg["profile"]["email"], attachment=cv_attachment(cfg, c["cv_variant"]))
+                           cfg["profile"]["email"], attachment=Path(c["attachment_path"]))
             except Exception as e:
                 db.move(job_id, "approved", reason=f"send failed: {e}"[:300])
                 raise HTTPException(502, f"Not sent: {e}")
@@ -270,8 +297,9 @@ def approve(job_id: int, body: dict = Body(default={})) -> dict:
         text = handoff_text(c["letter"], c["answers"])
         what = "Letter and screening answers copied" if text != c["letter"] else "Letter copied"
         where = "Apply in your own browser" if c["url"] else "Apply as the ad says"
+        cv = f" Upload {c['attachment']} as your CV (Open CV on the Waiting tab)." if c["tailored_cv"] else ""
         return {"open": c["url"] or None, "copy": text,
-                "done": f"{what}. {where}, then press 'I applied' on the Waiting tab."}
+                "done": f"{what}. {where}, then press 'I applied' on the Waiting tab.{cv}"}
     except IllegalTransition as e:
         raise HTTPException(409, str(e))
 
@@ -385,6 +413,120 @@ def handoff(job_id: int) -> dict:
     cfg, db = load_config(), _db()
     c = card(db, _job(db, job_id), cfg)
     return {"copy": handoff_text(c["letter"], c["answers"]), "open": c["url"] or None}
+
+
+# ---------------- tailored CV ----------------
+
+def _notes(job) -> dict:
+    n = _j(job["notes"])
+    return n if isinstance(n, dict) else {}
+
+
+@app.post("/api/jobs/{job_id}/cv/open")
+def cv_open(job_id: int, body: dict = Body(default={})) -> dict:
+    """Open the tailored CV (pdf or docx) in your own app, or its folder. Only the job's own files can be opened."""
+    from .. import tailored_cv
+    db = _db()
+    t = tailored(_notes(_job(db, job_id)))
+    if not t:
+        raise HTTPException(404, "This job has no tailored CV yet. Press Build CV.")
+    what = body.get("what") or "pdf"
+    p = Path(t["pdf"]).parent if what == "folder" else Path(t["docx"] if what == "docx" else t["pdf"])
+    if not p.exists():
+        raise HTTPException(404, f"{p.name} is no longer on disk. Press Build CV again.")
+    tailored_cv.open_file(p)
+    return {"done": f"Opened {p.name}." if what != "folder" else "Opened the folder."}
+
+
+@app.post("/api/jobs/{job_id}/cv/choice")
+def cv_choice(job_id: int, body: dict = Body(...)) -> dict:
+    """Which CV an email application attaches: the tailored one or your standard one."""
+    db = _db()
+    job = _job(db, job_id)
+    use = body.get("use")
+    if use not in ("tailored", "standard"):
+        raise HTTPException(400, "use must be tailored or standard")
+    notes = _notes(job)
+    if use == "tailored" and not tailored(notes):
+        raise HTTPException(409, "This job has no tailored CV yet. Press Build CV.")
+    notes["cv_choice"] = use
+    db.update_job(job_id, notes=json.dumps(notes, ensure_ascii=False))
+    return {"done": "Email applications attach the tailored CV." if use == "tailored"
+            else "Email applications attach your standard CV."}
+
+
+@app.post("/api/jobs/{job_id}/cv/build")
+def cv_build(job_id: int) -> dict:
+    """Tailor CV: build (or rebuild) the job's tailored CV in the background. Works with or without a letter."""
+    db = _db()
+    _job(db, job_id)
+    if not master.exists():
+        raise HTTPException(409, master.MISSING_HINT)
+    import threading
+
+    def run():
+        try:
+            from ..pipeline import rebuild_cv
+            rebuild_cv(DB(), load_config(), job_id)
+        except Exception as e:
+            log.warning("CV build %s failed: %s", job_id, e)
+    threading.Thread(target=run, daemon=True).start()
+    return {"done": "Tailoring your CV to this ad (under a minute). It shows on the card when ready."}
+
+
+# ---------------- a job ad you paste in ----------------
+
+@app.post("/api/jobs/add")
+def add_job(body: dict = Body(...)) -> dict:
+    """A job from an ad you paste (sites behind a sign-up wall, a recruiter's message, a PDF). It goes through the
+    same steps as found jobs (scored, then a letter is written whatever its score) and, unless tailor_cv is false,
+    a tailored CV is built with the letter."""
+    import hashlib
+    db = _db()
+    title = re.sub(r"\s+", " ", str(body.get("title") or "")).strip()[:200]
+    company = re.sub(r"\s+", " ", str(body.get("company") or "")).strip()[:200]
+    text = str(body.get("text") or "").strip()[:30000]
+    url = safe_url(body.get("url"))
+    if not title:
+        raise HTTPException(400, "Give the job title.")
+    if len(text) < 150:
+        raise HTTPException(400, "Paste the whole ad text (it looks too short to tailor a CV to).")
+    if body.get("url") and not url:
+        raise HTTPException(400, "The link must start with http:// or https://")
+    email = str(body.get("apply_email") or "").strip()
+    if email and not re.fullmatch(r"[^@\s]+@[^@\s]+\.[a-z]{2,}", email, re.I):
+        raise HTTPException(400, "That email address doesn't look right.")
+    loc = re.sub(r"\s+", " ", str(body.get("location") or "")).strip()[:120]
+    remote = bool(re.search(r"(?i)\b(remote|fully remote|teletrabajo|remoto|100% remot)", f"{title} {loc} {text}"))
+    ext = hashlib.sha1(f"{title}|{company}|{text}".encode("utf-8")).hexdigest()[:16]
+    if not db.upsert_job({"source": "pasted", "external_id": ext, "title": title, "company": company or None,
+                          "location": loc or None, "remote": remote, "url": url or None,
+                          "apply_email": email or None, "description": text, "posted_at": ""}):
+        raise HTTPException(409, "This job is already in your list (same title and company).")
+    job_id = db.conn.execute("SELECT id FROM jobs WHERE source='pasted' AND external_id=?", (ext,)).fetchone()[0]
+    want_cv = body.get("tailor_cv", True) is not False
+    if want_cv:
+        db.update_job(job_id, notes=json.dumps({"want_cv": True}))
+    what = "letter and tailored CV" if want_cv else "letter"
+    if not master.exists():
+        return {"id": job_id, "done": "Added. " + master.MISSING_HINT}
+    if workers_alive():
+        try:
+            from ..tasks import generate_one
+            generate_one(job_id)
+            return {"id": job_id, "done": f"Added. Its {what} appear under To review in a minute or two."}
+        except Exception as e:
+            log.warning("could not enqueue pasted job: %s", e)
+    import threading
+
+    def run():
+        try:
+            from ..pipeline import draft_job
+            draft_job(DB(), load_config(), None, job_id)
+        except Exception as e:
+            log.warning("pasted job %s failed: %s", job_id, e)
+    threading.Thread(target=run, daemon=True).start()
+    return {"id": job_id, "done": f"Added. Writing its {what} now (a minute or two)."}
 
 
 # ---------------- passwords saved for job sites by earlier versions ----------------
