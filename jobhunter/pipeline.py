@@ -231,6 +231,16 @@ def generate(db: DB, cfg: dict, job_id: int, prof=None, store: Store | None = No
     key_points = "\n".join(f"- {x.for_lang(out.get('lang', 'en'))}" for x in ret.facts[:6])
     notes = {"email_subject": out.get("subject"), "cv_variant": variant, "application_id": app_id,
              "unsupported": out["validation"]["hard"] + out["validation"]["soft"]}
+    if _cv_wanted(job):
+        notes["want_cv"] = True
+    try:   # a redraft writes a new letter; a CV you already tailored (and your attach choice) stays
+        old = json.loads(job.get("notes") or "{}")
+    except (json.JSONDecodeError, TypeError):
+        old = {}
+    if isinstance(old, dict):
+        notes.update({k: old[k] for k in ("tailored_cv", "tailored_cv_error", "cv_choice") if k in old})
+    if out["ok"] and (_cv_wanted(job) or _cv_auto(cfg)):   # on demand: Tailor CV, or the pasted-ad tick box
+        notes.update(tailor_cv(cfg, prof, job, jf, ret.gaps, store, out.get("lang")))
     if out["ok"]:
         db.move(job_id, "needs_review", reason=f"validation score {out['validation']['score']}",
                 cover_letter=out["text"], cv_summary="Most relevant CV points for this job:\n" + key_points,
@@ -239,6 +249,56 @@ def generate(db: DB, cfg: dict, job_id: int, prof=None, store: Store | None = No
     db.move(job_id, "failed", reason="validator blocked all attempts: " + "; ".join(out["validation"]["hard"][:3]),
             notes=json.dumps(notes, ensure_ascii=False))
     return "failed"
+
+
+def _cv_auto(cfg: dict) -> bool:
+    from .tailored_cv import _ccfg
+    return bool(_ccfg(cfg)["auto"])
+
+
+def _cv_wanted(job: dict) -> bool:
+    """The job asked for a CV with its letter (Add a job with "Tailor my CV too" ticked)."""
+    try:
+        n = json.loads(job.get("notes") or "{}")
+    except (json.JSONDecodeError, TypeError):
+        return False
+    return isinstance(n, dict) and bool(n.get("want_cv"))
+
+
+def tailor_cv(cfg: dict, prof, job: dict, jf: JobFacts, gaps: list, store=None, lang: str | None = None) -> dict:
+    """The job's tailored CV (tailored_cv.py), as the notes keys it lives under. Never fails the letter: a problem
+    is kept as tailored_cv_error and the card offers to build it again."""
+    from . import tailored_cv
+    if not tailored_cv._ccfg(cfg)["enabled"]:
+        return {}
+    try:
+        return {"tailored_cv": tailored_cv.make(cfg, prof, job, jf, gaps, store, lang), "tailored_cv_error": None}
+    except Exception as e:
+        log.warning("tailored CV failed job %s: %s", job.get("id"), e)
+        return {"tailored_cv": None, "tailored_cv_error": str(e)[:300]}
+
+
+def rebuild_cv(db: DB, cfg: dict, job_id: int) -> dict:
+    """Tailor CV on a card: a fresh tailored CV for one job (letter or not). Language follows the letter, else
+    the ad."""
+    job = dict(db.job(job_id))
+    prof, store = master.get(), Store(cfg)
+    f = _facts(job)
+    jf = JobFacts.model_validate(f["job_facts"]) if f.get("job_facts") else grounding.extract(cfg, job)
+    app_row = db.application(job_id)
+    gaps = (json.loads(app_row["retrieval_json"] or "{}") or {}).get("gaps", []) if app_row else []
+    lang = (app_row["lang"] if app_row else None) or None
+    got = tailor_cv(cfg, prof, job, jf, gaps, store, lang)
+    if got:
+        cur = db.job(job_id)  # read again: the card may have changed notes while the CV was built
+        try:
+            notes = json.loads(cur["notes"] or "{}")
+        except (json.JSONDecodeError, TypeError):
+            notes = {}
+        notes = notes if isinstance(notes, dict) else {}
+        notes.update(got)
+        db.update_job(job_id, notes=json.dumps(notes, ensure_ascii=False))
+    return got
 
 
 # ---------------- batch helpers (used by workers and run()) ----------------

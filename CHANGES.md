@@ -1,3 +1,27 @@
+# A CV tailored to each ad, and adding a job by pasting its ad (23 Nov 2026)
+
+- **Tailor CV** on a letter card (and on the Waiting tab) builds a one-page ATS CV for that ad, as PDF and Word, in
+  `applications/<job id>/` of the data folder (`<Name>_CV_<Company>.pdf`). English or Spanish to match the ad.
+- Built only from the facts profile, nothing invented: real titles, employers and MM/YYYY dates from `experience`,
+  skills from `skills_verified` (ones the ad names first; a tool you only have a phrasing rule for, like Jamf, is
+  shown in the rule's own words, never bare), achievements word for word (closest to the ad first; 6 for the current
+  job, 4 for earlier ones), the career break with its fixed line. The 2-3 sentence summary is written by the local AI
+  and checked sentence by sentence like letter claims; a failing sentence is dropped, and if none pass the summary is
+  made of your summary facts.
+- ATS layout: one column, real heading styles (Professional Summary, Skills, Work Experience, Education, Languages),
+  no tables, text boxes, headers, footers or images, left-aligned text that PDF readers extract cleanly.
+- The card shows a keyword report: the ad's tools and your target keywords that are on the CV, and the ones that
+  aren't (never added). Open CV, Open in Word, Show folder, Build again.
+- Email applications attach the tailored PDF once one is built; each card can switch back to the standard CV.
+  Web hand-offs say which file to upload.
+- On demand only. `tailored_cv.auto: true` in config.yaml builds one with every letter. Redrafting a letter keeps the
+  CV. A CV problem never blocks the letter: the card shows what went wrong.
+- **Add a job**: a new tab to paste an ad (title, text; company, location, link and email optional), for sites behind
+  a sign-up wall such as Jobleads or ads that arrive by message. The job is scored and gets a letter whatever its
+  score, plus a tailored CV when "Tailor my CV too" is ticked. Source `pasted`; the same title and company twice is
+  refused.
+- New dependency: fpdf2 (pure Python) for the PDF. It uses Calibri or Arial from the system when present.
+
 # No local server left anywhere; downloads on the Releases page (23 Nov 2026)
 
 - The app has had no web server since the window moved to a private pipe. Now the leftovers are gone too: the

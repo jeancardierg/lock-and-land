@@ -8,6 +8,7 @@ google-api-python-client>=2.140
 google-auth-oauthlib>=1.2
 google-auth-httplib2>=0.2
 pypdf>=4.0
+fpdf2>=2.7               # tailored CV PDFs (pure Python)
 pydantic>=2.6
 numpy>=1.26
 huey>=2.5
