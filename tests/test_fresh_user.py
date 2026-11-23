@@ -136,7 +136,7 @@ def test_cv_text_route():
     import base64
     from fastapi.testclient import TestClient
     from jobhunter.review.app import app
-    c = TestClient(app, base_url="http://127.0.0.1:8502")
+    c = TestClient(app, base_url="http://localhost")
     b64 = "data:application/pdf;base64," + base64.b64encode(_pdf(["- Ran DSC and TGA on polymer blends every week for two years"] * 3)).decode()
     r = c.post("/api/setup/cv-text", json={"name": "cv.pdf", "b64": b64}, headers={"X-Jobhunter": "1"})
     assert r.status_code == 200 and "DSC and TGA" in r.json()["text"]

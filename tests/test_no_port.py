@@ -99,3 +99,15 @@ def test_copy_buttons_go_through_the_bridge():
         page = (root / f).read_text(encoding="utf-8")
         assert "navigator.clipboard.writeText(" not in page.replace("navigator.clipboard?navigator.clipboard.writeText(t)", "")
     assert window.Bridge.__dict__["copy"] and hasattr(window, "_win_copy")
+
+
+def test_docs_and_pages_describe_no_local_server():
+    """The app has no web server, so docs, example config and pages must not send anyone to a local port."""
+    from pathlib import Path
+    root = Path(window.__file__).resolve().parents[2]
+    files = ["README.md", "DESKTOP.md", "SECURITY.md", "config.example.yaml",
+             *(f"jobhunter/review/{f}" for f in ("index.html", "setup.html", "connections.html"))]
+    for f in files:
+        s = (root / f).read_text(encoding="utf-8").lower()
+        for bad in (":8501", ":8502", "tailscale", "127.0.0.1", "playwright", "local server"):
+            assert bad not in s, (f, bad)

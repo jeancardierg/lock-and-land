@@ -1,7 +1,7 @@
 """Job state machine. Every state change goes through transition(): guarded UPDATE + job_events row,
 in one transaction, so two workers (or a double click) can never move the same job twice.
 
-`state` drives the pipeline. The v0.2 `status` column is kept in sync for the Streamlit dashboard and the
+`state` drives the pipeline. The v0.2 `status` column is kept in sync for the
 tracker (which adds interview / offer / rejected / withdrawn after a job is submitted).
 """
 from __future__ import annotations

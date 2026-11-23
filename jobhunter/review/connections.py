@@ -1,6 +1,6 @@
-"""Configuration page and API (/connections). Only answers requests from this computer (127.0.0.1), with a matching
-Host header and the X-Jobhunter header, so a web page in your browser can't read or change secrets (CSRF /
-DNS rebinding), even when the review page is bound to a Tailscale IP for your phone."""
+"""Configuration page and API (/connections). The app window reaches it in-process (no network port). As defence in
+depth it also refuses any request that doesn't come from this app (local peer, local Host header, X-Jobhunter
+header), so a web page in your browser could never read or change secrets."""
 from __future__ import annotations
 
 from pathlib import Path

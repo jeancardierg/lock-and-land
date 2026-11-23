@@ -31,8 +31,14 @@ The app never fills in job-site forms, never signs in to job sites and never tou
 
 ## 1. Install
 
-Download the installer for your computer from the [Releases](../../releases) page. Each release also has a
-`SHA256SUMS` file if you want to check the download.
+Download the installer for your computer from the [latest release](../../releases/latest):
+
+| Computer | File |
+|---|---|
+| Windows 10 or 11 | `LockAndLand-setup-<version>.exe` |
+| Mac with an Apple chip (M1 or newer) | `LockAndLand-<version>.dmg` |
+
+Each release also has `SHA256SUMS-windows.txt` and `SHA256SUMS-macos.txt` if you want to check the download.
 
 ### Windows
 
@@ -92,7 +98,7 @@ The **Configuration** page has a **Getting started** list that ticks each step o
    4. Press **Send test message**.
 
    You get a message when letters are ready, when a job is waiting for you, when a sign-in expires or when the
-   database has a problem. Messages carry the job title and a link only.
+   database has a problem. Messages carry a short notice and the job title only, never letter text.
 6. **Job sources (optional).** These work with no setup: Himalayas, Jobicy, We Work Remotely, Working Nomads,
    Remotive, Arbeitnow, RemoteOK, Hacker News "Who is hiring", The Muse, and LinkedIn job-alert emails (needs Gmail).
    For more local jobs, add a free key on Configuration and switch the source on:
@@ -134,19 +140,22 @@ tokens or your facts profile into an issue.
 
 ## For developers
 
-Python 3.11. The app is a tray app (pystray) with a native window (pywebview) over a local FastAPI page on
-`127.0.0.1:8502`, background queues (Huey on SQLite), and an encrypted SQLite database (SQLCipher).
+Python 3.11. The app is a tray app (pystray) with a native window (pywebview), background queues (Huey on SQLite)
+and an encrypted SQLite database (SQLCipher). There is no web server and no network port: the window's pages call
+the app's FastAPI routes in-process through a private named pipe (Windows) or Unix socket (macOS). The only
+network connections are to the job sources, Gmail and Telegram if you set them up, and Ollama on your own computer.
 
 ```bash
 python -m venv .venv
 .venv/bin/pip install -r requirements.txt        # Windows: .venv\Scripts\pip ...
 .venv/bin/python -m pytest -q                     # runs on the fictional sample profile in tests/fixtures
 .venv/bin/python -m jobhunter doctor              # checks your setup
-.venv/bin/python -m jobhunter review              # the review page without the desktop shell
+.venv/bin/python -m jobhunter run                 # one fetch, score and draft cycle in the terminal (never sends)
 ```
 
 - Installers: `packaging/build_windows.ps1` (needs Inno Setup 6) and `packaging/build_mac.sh`. GitHub Actions
-  (`.github/workflows/build.yml`) builds both on every push to `main`, and a `v*` tag publishes them as a Release.
+  (`.github/workflows/build.yml`) builds both on every push to `main`. Publishing a GitHub Release with a new
+  `v*` tag (for example `v0.4.1`) makes the same workflow attach both installers and their checksums to it.
 - Config reference: [`config.example.yaml`](config.example.yaml). The app writes your own `config.yaml` in the data folder.
 - Desktop internals: [DESKTOP.md](DESKTOP.md). History: [CHANGES.md](CHANGES.md).
 - Personal files are never committed: `.gitignore` excludes `config.yaml`, `.env`, `cv/`, `facts/`, `data/` and databases.

@@ -222,7 +222,7 @@ def recommend(hw: dict, ollama: dict | None = None, current: dict | None = None)
     if level in ("weak", "too_weak", "slow"):
         fallback = ("Better option: run Ollama on a stronger computer you own (a desktop with an NVIDIA card with 8 GB "
                     "or more, or a Mac with 16 GB or more), start it with OLLAMA_HOST=0.0.0.0, and put "
-                    "http://<that-computer>:11434 in llm.ollama.host. Keep it on your home network or Tailscale; "
+                    "http://<that-computer>:11434 in llm.ollama.host. Keep it on your home network or a private VPN; "
                     "never expose port 11434 to the internet.")
     # a bigger writer that only fits when part of it runs on the CPU
     alternative = None

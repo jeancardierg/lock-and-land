@@ -94,7 +94,7 @@ def test_saving_a_key_reports_the_test(monkeypatch, tmp_path):
     monkeypatch.setattr(C, "source_test", lambda key, cfg=None: {"ok": False, "detail": "nope"})
     app = FastAPI()
     app.include_router(R.router)
-    c = TestClient(app, base_url="http://127.0.0.1:8502")
+    c = TestClient(app, base_url="http://localhost")
     r = c.post("/api/connections/secret", json={"name": "FINDWORK_API_KEY", "value": "abc"}, headers={"X-Jobhunter": "1"})
     assert r.status_code == 200 and r.json()["test"] == {"ok": False, "detail": "nope"}
     r = c.post("/api/connections/gmail/app-password", json={"email": "x@gmail.com", "password": "short"},

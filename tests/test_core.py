@@ -234,11 +234,6 @@ def test_local_area():
     assert rules.decide(job(location="Madrid"), {"work_mode": "remote", "remote_scope": "Spain"}, CFG)[0] is None
 
 
-def test_dashboard_compiles():
-    import ast, pathlib
-    ast.parse(pathlib.Path(config.ROOT, "jobhunter", "dashboard.py").read_text(encoding="utf-8"))
-
-
 def test_rules_v3_office_abroad_province_and_us():
     from jobhunter import rules
     d = lambda loc, info, **kw: rules.decide(job(location=loc, **kw), info, CFG)[0]

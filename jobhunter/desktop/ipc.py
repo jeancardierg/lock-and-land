@@ -74,14 +74,14 @@ class AsgiDispatcher:
         path, _, query = path.partition("?")
         path = path.split("#")[0] or "/"
         hdrs = {k.lower(): str(v) for k, v in headers.items()}
-        hdrs.update({"host": "127.0.0.1:8502", "x-jobhunter": "1"})  # the window is trusted: it's this app
+        hdrs.update({"host": "localhost", "x-jobhunter": "1"})  # synthetic: nothing listens; the window is this app
         if body:
             hdrs.setdefault("content-type", "application/json")
         hdrs["content-length"] = str(len(body))
         scope = {"type": "http", "asgi": {"version": "3.0"}, "http_version": "1.1", "method": method.upper(),
                  "scheme": "http", "path": path, "raw_path": path.encode(), "query_string": query.encode(),
                  "root_path": "", "headers": [(k.encode(), v.encode()) for k, v in hdrs.items()],
-                 "client": ("127.0.0.1", 0), "server": ("127.0.0.1", 8502)}
+                 "client": ("localhost", 0), "server": ("localhost", None)}
         sent = False
 
         async def receive():
