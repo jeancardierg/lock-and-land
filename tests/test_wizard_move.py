@@ -88,7 +88,7 @@ def test_setup_and_home_routes(tmp_path, monkeypatch):
     from fastapi.testclient import TestClient
     from jobhunter import connections as C
     from jobhunter.review.app import app
-    c = TestClient(app, base_url="http://127.0.0.1:8502")
+    c = TestClient(app, base_url="http://localhost")
     assert c.get("/setup").status_code == 200
     v = c.get("/api/setup").json()
     assert "roles" in v and "work_modes" in v

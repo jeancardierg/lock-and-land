@@ -208,11 +208,6 @@ limits:
 enrich:
   enabled: true              # fetch the full ad from public ATS pages (Greenhouse, Lever, Ashby...). Never LinkedIn/Indeed.
 
-review:
-  host: "127.0.0.1"          # set to this PC's Tailscale IP to review from your phone
-  port: 8502
-  public_host: ""            # host name used in notification links, if different
-
 notify:
   review_batch: 5            # "letters ready" alert every 5 letters
   # Set on Configuration -> Notifications. Per alert and channel: instant | hourly | daily | off

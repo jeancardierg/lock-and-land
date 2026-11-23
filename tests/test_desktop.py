@@ -124,7 +124,7 @@ def test_queue_storage_encrypted(tmp_path):
 def _client():
     from fastapi.testclient import TestClient
     from jobhunter.review.app import app
-    return TestClient(app, base_url="http://127.0.0.1:8502")
+    return TestClient(app, base_url="http://localhost")
 
 
 def test_connections_api_local_only_and_header(monkeypatch):
@@ -148,7 +148,7 @@ def test_connections_api_local_only_and_header(monkeypatch):
                headers={"X-Jobhunter": "1"})
     assert r.status_code == 200 and secrets.get("TELEGRAM_BOT_TOKEN") == "new"
     # a foreign Host header (DNS rebinding) is refused
-    assert c.get("/api/connections", headers={"host": "evil.example:8502"}).status_code == 403
+    assert c.get("/api/connections", headers={"host": "evil.example"}).status_code == 403
     secrets.delete("TELEGRAM_BOT_TOKEN")
     assert c.get("/connections").status_code == 200
     page = c.get("/configuration")

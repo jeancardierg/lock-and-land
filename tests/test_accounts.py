@@ -41,7 +41,7 @@ def saved(monkeypatch):
 
 def test_saved_passwords_are_listed_copied_after_the_popup_and_forgotten(saved):
     from jobhunter.review.app import app
-    c = TestClient(app, base_url="http://127.0.0.1:8502")
+    c = TestClient(app, base_url="http://localhost")
     rows = c.get("/api/accounts", headers=H).json()["accounts"]
     assert rows == [{"site": SITE, "email": "me@example.com", "company": "Acme", "status": "created",
                      "added": "2026-11-23"}]

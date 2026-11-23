@@ -24,7 +24,7 @@ datas += collect_data_files("docx")                # python-docx templates (read
 # Windows, Cocoa on macOS) and the shared modules
 _WEBVIEW_DROP = ("webview.platforms.gtk", "webview.platforms.qt", "webview.platforms.cef", "webview.platforms.android")
 _webview = [m for m in collect_submodules("webview") if not m.startswith(_WEBVIEW_DROP)]
-hidden = (collect_submodules("jobhunter") + collect_submodules("uvicorn") + collect_submodules("keyring.backends")
+hidden = (collect_submodules("jobhunter") + collect_submodules("keyring.backends")
           + collect_submodules("pystray") + collect_submodules("huey") + _webview + ["sqlcipher3", "sqlcipher3.dbapi2"])
 if sys.platform == "win32":
     hidden += ["win11toast", "clr"]

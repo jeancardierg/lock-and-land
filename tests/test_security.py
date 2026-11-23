@@ -37,14 +37,14 @@ def test_redact_hides_keys_in_urls_and_known_values():
 
 
 def test_cross_site_writes_and_rebinding_refused():
-    c = TestClient(app, base_url="http://127.0.0.1:8502")
+    c = TestClient(app, base_url="http://localhost")
     r = c.post("/api/jobs/999999/reject", json={"reason": "x"}, headers={"Origin": "https://evil.example"})
     assert r.status_code == 403
     r = c.post("/api/jobs/999999/reject", json={"reason": "x"}, headers={"Origin": "null"})
     assert r.status_code == 403
     assert c.post("/api/jobs/999999/reject", json={"reason": "x"},
-                  headers={"Origin": "http://127.0.0.1:8502"}).status_code == 404  # same origin: allowed
-    assert c.get("/api/health", headers={"Host": "attacker.example:8502"}).status_code == 403
+                  headers={"Origin": "http://localhost"}).status_code == 404  # same origin: allowed
+    assert c.get("/api/health", headers={"Host": "attacker.example"}).status_code == 403
     assert c.get("/api/health").status_code == 200
 
 
@@ -69,7 +69,7 @@ def test_native_confirmation_guards_sensitive_routes(monkeypatch):
     assert confirm.ask("anything?") is True  # not the desktop app: no dialog, behaviour unchanged
     asked = []
     monkeypatch.setattr(confirm, "ask", lambda q, d="": asked.append(q) or False)
-    c = TestClient(app, base_url="http://127.0.0.1:8502")
+    c = TestClient(app, base_url="http://localhost")
     h = {"X-Jobhunter": "1"}
     assert c.post("/api/connections/recovery-key", json={"confirm": "show"}, headers=h).status_code == 403
     assert c.post("/api/connections/recovery-key/restore", json={"key": "0" * 64}, headers=h).status_code == 403

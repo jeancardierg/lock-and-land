@@ -59,7 +59,7 @@ def test_cv_fill_route(monkeypatch):
     from fastapi.testclient import TestClient
     from jobhunter.review.app import app
     monkeypatch.setattr(llm, "ollama_ok", lambda cfg: False)
-    c = TestClient(app, base_url="http://127.0.0.1:8502")
+    c = TestClient(app, base_url="http://localhost")
     r = c.post("/api/setup/cv-fill", json={"text": FULL}, headers={"X-Jobhunter": "1"})
     assert r.status_code == 200 and r.json()["values"]["a_name"] == "Laura Example"
     assert c.post("/api/setup/cv-fill", json={"text": "short"}, headers={"X-Jobhunter": "1"}).status_code == 400

@@ -4,7 +4,7 @@
   gpu      one worker: extraction, scoring and letters (one Ollama model loaded at a time)
 
 The app never fills application forms (bot protection blocks it): you apply in your own browser.
-Start both in one process with `python -m jobhunter workers` (scripts\\start_workers.ps1 at logon).
+The desktop app starts both in its own process; `python -m jobhunter workers` runs them without the window.
 """
 from __future__ import annotations
 

@@ -65,7 +65,7 @@ def test_quiet_hours_hold_then_release(sent):
 def test_save_settings_api(sent):
     from fastapi.testclient import TestClient
     from jobhunter.review.app import app
-    c = TestClient(app, base_url="http://127.0.0.1:8502")
+    c = TestClient(app, base_url="http://localhost")
     h = {"X-Jobhunter": "1"}
     body = {"events": {"recruiter": {"desktop": "hourly", "telegram": "off"}}, "strong_score": 85,
             "digest_time": "07:30", "quiet_hours": {"enabled": True, "start": "23:00", "end": "07:00"}}

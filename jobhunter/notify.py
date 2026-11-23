@@ -255,16 +255,10 @@ def save_state(st: dict) -> None:
     _save(STATE, st)
 
 
-def review_url(cfg: dict, path: str = "/") -> str:
-    r = cfg.get("review") or {}
-    return f"http://{r.get('public_host') or r.get('host', '127.0.0.1')}:{r.get('port', 8502)}{path}"
-
-
 def _deliver(cfg: dict, channel: str, title: str, body: str, path: str = "/") -> bool:
     if channel == "desktop":
         return toast(title, body)
-    url = review_url(cfg, path) if (cfg.get("review") or {}).get("public_host") else ""
-    return telegram(cfg, f"{title}\n{body}" + (f"\n{url}" if url else ""))
+    return telegram(cfg, f"{title}\n{body}")
 
 
 def send(cfg: dict, title: str, body: str, path: str = "/", event: str | None = None) -> None:

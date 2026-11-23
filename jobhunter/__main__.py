@@ -4,11 +4,10 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import subprocess
 import sys
 import time
 
-from .config import DATA, HOME, ROOT, load_config
+from .config import DATA, HOME, load_config
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -21,8 +20,6 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("doctor", help="check config, profile, models, mail")
     ga = sub.add_parser("gmail-auth", help="interactive Gmail consent (gmail_api backend only)")
     ga.add_argument("--force", action="store_true", help="ignore the saved token and sign in again")
-    sub.add_parser("dashboard", help="Streamlit dashboard (tracker, settings) on :8501")
-    sub.add_parser("review", help="fast review page on :8502")
     w = sub.add_parser("workers", help="run the main and gpu queues in this process")
     w.add_argument("--only", nargs="*", choices=["main", "gpu"])
     sub.add_parser("migrate", help="back up and migrate the database")
@@ -51,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
         ensure_home()
     DATA.mkdir(parents=True, exist_ok=True)
     if sys.stdout is None or sys.stderr is None:
-        # pythonw (hidden start) has no console: uvicorn and print() would crash or vanish, so give them a file
+        # pythonw (hidden start) has no console: print() and logging would crash or vanish, so give them a file
         con = open(DATA / "console.log", "a", encoding="utf-8", buffering=1)
         sys.stdout = sys.stdout or con
         sys.stderr = sys.stderr or con
@@ -82,22 +79,13 @@ def main(argv: list[str] | None = None) -> int:
         from . import gmail
         try:
             prof = gmail.service(interactive=True, force=args.force).users().getProfile(userId="me").execute()
-        except Exception as e:  # visible to the dashboard, which starts this without a console
+        except Exception as e:  # visible to the app, which starts this without a console
             logging.exception("gmail-auth failed")
             (DATA / "gmail_auth_error.txt").write_text(f"{type(e).__name__}: {e}", encoding="utf-8")
             print(f"Gmail sign-in failed: {e}")
             return 1
         (DATA / "gmail_auth_error.txt").unlink(missing_ok=True)
         print(f"Gmail OK: {prof['emailAddress']}")
-    elif args.cmd == "dashboard":
-        return subprocess.call([sys.executable, "-m", "streamlit", "run", str(ROOT / "jobhunter" / "dashboard.py"),
-                                "--server.headless", "true", "--server.address", "127.0.0.1",
-                                "--browser.gatherUsageStats", "false", "--client.toolbarMode", "minimal"])
-    elif args.cmd == "review":
-        import uvicorn
-        r = cfg.get("review") or {}
-        uvicorn.run("jobhunter.review.app:app", host=r.get("host", "127.0.0.1"), port=r.get("port", 8502),
-                    log_level="warning")
     elif args.cmd == "workers":
         return workers(args.only)
     elif args.cmd == "migrate":

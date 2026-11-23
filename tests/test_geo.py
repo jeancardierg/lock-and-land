@@ -91,7 +91,7 @@ def test_tiles_cached_and_bounded(home, monkeypatch):
 def test_routes_and_static(monkeypatch):
     from fastapi.testclient import TestClient
     from jobhunter.review.app import app
-    c = TestClient(app, base_url="http://127.0.0.1:8502")
+    c = TestClient(app, base_url="http://localhost")
     assert c.get("/static/leaflet/leaflet.js").status_code == 200
     assert c.get("/static/%2e%2e/connections.py").status_code == 404
     monkeypatch.setattr(geo, "search", lambda q: [{"name": "Badalona"}])

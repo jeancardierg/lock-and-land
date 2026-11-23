@@ -1,3 +1,12 @@
+# No local server left anywhere; downloads on the Releases page (23 Nov 2026)
+
+- The app has had no web server since the window moved to a private pipe. Now the leftovers are gone too: the
+  `review` and `dashboard` commands, the old Streamlit dashboard, the v0.3 PowerShell scripts in `scripts/`, the
+  `review:` section of config.yaml (host, port, phone access) and the optional link in Telegram alerts that pointed
+  at it. Streamlit and uvicorn are no longer dependencies.
+- README, DESKTOP.md and SECURITY.md describe the app as it is: no open port, only outgoing connections.
+- Installers are published on the GitHub Releases page; the README links to the latest release.
+
 # Automated applications removed: every web job is a hand-off (23 Nov 2026)
 
 - Bot protection (Cloudflare, DataDome, PerimeterX and similar) blocks automated form filling too often, so the app no

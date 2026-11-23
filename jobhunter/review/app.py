@@ -1,6 +1,6 @@
 """Review gateway: one card per job, three keys. A = approve and apply, E = edit, R = reject.
 
-Desktop app: no server and no port; the window calls these routes in-process (desktop/ipc.py). `jobhunter review` (CLI) still serves them on 127.0.0.1:8502 for development.
+No server and no port: the app window calls these routes in-process over a private pipe (desktop/ipc.py).
 Web applications are always done by hand: "Approve & apply" copies the letter and screening answers and opens the
 ad in your normal browser (the app never fills forms: bot protection blocks automation). You then press 'I applied'.
 Email applications keep v0.2's safe path: exact recipient shown, second confirmation, CV PDF checked.
@@ -30,20 +30,15 @@ app.include_router(_connections)
 
 @app.middleware("http")
 async def _same_origin_only(request, call_next):
-    """`jobhunter review` (development) serves these routes on a real port. A web page in your browser must not
-    approve, reject or read jobs there: cross-site writes (CSRF) and DNS-rebinding reads are refused. The desktop
-    window calls the routes in-process with no Origin header and a local Host, so it is unaffected."""
+    """Defence in depth: the routes are never on a network port, but if they were ever served, a web page in your
+    browser still couldn't approve, reject or read jobs (cross-site writes and DNS-rebinding reads are refused).
+    The app window calls the routes in-process with no Origin header and a local Host, so it is unaffected."""
     from fastapi.responses import JSONResponse
     from urllib.parse import urlsplit
     host = (request.headers.get("host") or "").lower()
     name = host.rsplit(":", 1)[0].strip("[]") if not host.startswith("[") or "]:" in host else host.strip("[]")
     allowed = {"127.0.0.1", "::1", "localhost", "testserver"}
-    try:
-        r = load_config().get("review") or {}
-        allowed |= {str(r.get(k)).lower() for k in ("host", "public_host") if r.get(k)}
-    except Exception:
-        pass
-    if name not in allowed and "0.0.0.0" not in allowed:
+    if name not in allowed:
         return JSONResponse({"detail": "Bad Host header"}, status_code=403)
     origin = request.headers.get("origin")
     if request.method not in ("GET", "HEAD", "OPTIONS") and origin:

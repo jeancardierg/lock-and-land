@@ -92,7 +92,7 @@ def test_bad_token_and_network_errors_never_log_token(tg, caplog):
 def test_api_routes(tg):
     from fastapi.testclient import TestClient
     from jobhunter.review.app import app
-    c = TestClient(app, base_url="http://127.0.0.1:8502")
+    c = TestClient(app, base_url="http://localhost")
     h = {"X-Jobhunter": "1"}
     r = c.post("/api/connections/secret", json={"name": "TELEGRAM_BOT_TOKEN", "value": "bot" + TOKEN}, headers=h)
     assert r.status_code == 200 and r.json()["test"]["ok"] and secrets.get("TELEGRAM_BOT_TOKEN") == TOKEN

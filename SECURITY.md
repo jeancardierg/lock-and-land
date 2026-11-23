@@ -15,8 +15,9 @@ Never include real secrets in a report: no recovery keys, app passwords, tokens,
   are redacted from log lines.
 - **The database** is encrypted with SQLCipher 4 (AES-256). The recovery key is shown only after an operating-system
   confirmation.
-- **The local page** listens on `127.0.0.1` only, refuses cross-site requests, and every page has a strict Content
-  Security Policy. Risky actions (showing the recovery key, sending an email application, moving the data folder) ask
+- **No open port.** The app runs no web server. Its window talks to the app over a private named pipe (Windows) or
+  Unix socket (macOS) protected by a random key in your data folder, so nothing listens on the network. Every page
+  has a strict Content Security Policy. Risky actions (showing the recovery key, sending an email application, moving the data folder) ask
   in a native OS dialog that page script can't click.
 - **Untrusted input.** Job ads and recruiter emails are treated as untrusted text in every AI prompt, links are
   limited to http(s), and links to local or home-network addresses are never fetched.
