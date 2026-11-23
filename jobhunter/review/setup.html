@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lock &amp; Land: job criteria</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1b;--muted:#6b6b66;--line:#e3e2dc;--ok:#1a7f37;--bad:#c8261d;--acc:#c2410c;--chip:#efeee9}
+@media (prefers-color-scheme:dark){:root{--bg:#161614;--card:#1f1f1c;--ink:#ecebe6;--muted:#a3a29b;--line:#34332e;--ok:#4cc26e;--bad:#ff6b5f;--acc:#f26b2a;--chip:#2c2b27}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+header{display:flex;gap:16px;align-items:center;padding:12px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2;flex-wrap:wrap}
+header h1{font-size:17px;margin:0}header a{color:var(--muted);text-decoration:none;font-size:14px}
+main{max-width:760px;margin:0 auto;padding:20px 16px 110px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.step h2{font-size:16px;margin:0 0 4px}.muted{color:var(--muted)}small{font-size:13px}
+label{display:block;font-weight:600;font-size:14px;margin:14px 0 4px}label span{font-weight:400;color:var(--muted)}
+input[type=text],input[type=number],textarea{width:100%;font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+textarea{min-height:74px}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){.two{grid-template-columns:1fr}}
+.opt{display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:6px 0}.opt input{margin-top:4px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chips label{display:flex;gap:6px;align-items:center;font-weight:400;border:1px solid var(--line);border-radius:999px;padding:3px 12px;margin:0}
+.bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:10px;justify-content:center;align-items:center}
+.btn{font:inherit;padding:9px 18px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}.btn.go{background:var(--acc);border-color:var(--acc);color:#fff}
+#msg{font-size:14px}
+.tag{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:0 8px;margin-left:6px;vertical-align:1px}
+.tag.cv{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.tag.need{background:color-mix(in srgb,var(--acc) 15%,transparent);color:var(--acc)}
+.fromcv{border-color:var(--ok)!important}
+#cvsum{margin:10px 0 0;font-size:14px}
+.pk{position:relative;display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:40px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:text}
+.pk:focus-within{border-color:var(--acc)}
+.pkc{display:contents}.pkchip{display:inline-flex;align-items:center;gap:2px;background:var(--chip);border-radius:999px;padding:2px 4px 2px 10px;font-size:14px}
+.pkchip button{border:0;background:none;color:var(--muted);font-size:16px;line-height:1;cursor:pointer;padding:0 5px;border-radius:999px}.pkchip button:hover{color:var(--bad)}
+.pkq{flex:1;min-width:140px;border:0;outline:0;background:transparent;color:var(--ink);font:inherit;padding:3px 2px}
+.pkdd{position:absolute;left:-1px;right:-1px;top:100%;margin-top:4px;background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:5;max-height:260px;overflow:auto}
+.pko{padding:7px 10px;cursor:pointer}.pko.on,.pko:hover{background:var(--chip)}
+#map{height:380px;border-radius:10px;border:1px solid var(--line);margin-top:10px;z-index:0}
+.maprow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0 4px}.maprow input[type=range]{flex:1;min-width:160px;accent-color:var(--acc)}.bad{color:var(--bad)}.ok{color:var(--ok)}
+/* motion ("Lock-on"): playful but quick, never blocks input */
+:root{--ease:cubic-bezier(.2,.7,.3,1);--spring:cubic-bezier(.34,1.56,.64,1)}
+.btn,.bar button,nav button,.chipf,.jr,header a{transition:background-color .14s ease,border-color .14s ease,color .14s ease,transform .12s ease}
+.btn:active,.bar button:active{transform:scale(.95)}
+main{animation:jh-in .22s var(--ease) both}
+.enter{animation:jh-spring .45s var(--spring) both}
+@keyframes jh-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes jh-spring{from{opacity:0;transform:scale(.9) translateY(10px)}to{opacity:1;transform:none}}
+.card{position:relative}
+.hit{animation:jh-hit .32s cubic-bezier(.5,-.4,.7,1) both;pointer-events:none}
+.miss{animation:jh-miss .42s ease-in both;pointer-events:none}
+@keyframes jh-hit{0%{transform:none}30%{transform:scale(1.03)}100%{opacity:0;transform:translate(45%,-35%) scale(.4) rotate(10deg)}}
+@keyframes jh-miss{0%{transform:none}20%{transform:translateX(-8px) rotate(-1deg)}40%{transform:translateX(8px) rotate(1deg)}100%{opacity:0;transform:translateX(-110%) rotate(-5deg)}}
+.reticle{position:absolute;left:50%;top:120px;width:150px;height:150px;margin-left:-75px;pointer-events:none;z-index:3;animation:jh-lock .38s cubic-bezier(.2,.9,.3,1.2) both}
+.reticle circle.dot{animation:jh-dot .38s ease-out both}
+@keyframes jh-lock{0%{opacity:0;transform:scale(1.8) rotate(-90deg)}70%{opacity:1;transform:scale(.95) rotate(4deg)}100%{opacity:1;transform:none}}
+@keyframes jh-dot{0%,60%{r:0}80%{r:9}100%{r:6}}
+.reasons.on,.det.enter{animation:jh-spring .3s var(--spring) both}
+#toast{display:block!important;opacity:0;visibility:hidden;transform:translate(-50%,-14px) scale(.8);transition:opacity .2s ease,transform .35s var(--spring),visibility .2s}
+#toast.show{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1)}
+#busy{position:fixed;top:0;left:0;right:0;height:3px;overflow:hidden;z-index:6;opacity:0;transition:opacity .2s;pointer-events:none}
+#busy.on{opacity:1}#busy::after{content:"";position:absolute;inset:0;width:35%;background:var(--acc);animation:jh-load 1.1s ease-in-out infinite}
+@keyframes jh-load{from{transform:translateX(-100%)}to{transform:translateX(300%)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-delay:0s!important;transition-duration:1ms!important}#busy::after{animation:none;width:100%;opacity:.5}.reticle{display:none}}
+</style>
+</head>
+<body>
+<header><h1>Lock &amp; Land</h1><a href="/">&larr; Review</a><a href="/configuration">Configuration</a></header>
+<main id="main"><p class="muted">Loading…</p></main>
+<div class="bar"><span id="msg" class="muted"></span><button class="btn go" onclick="save()">Save criteria</button></div>
+<script>
+window.jhGo=window.jhGo||(p=>{location.href=p});  // in the app window, pages load through the app
+const $=s=>document.querySelector(s), esc=s=>(s??'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let V=null;
+const lines=a=>(a||[]).join('\n'), csv=a=>(a||[]).join(', ');
+async function load(){
+  const r=await fetch('/api/setup');V=await r.json();
+  $('#main').innerHTML=`
+  ${V.completed?'<p>Your job criteria. Change anything and save; the next search uses it.</p>':`<div class="step"><h2>Welcome to Lock &amp; Land</h2><p>It finds jobs that fit you, writes a draft letter for each, and waits for you to approve. Nothing is ever sent without you.</p>
+    <p><b>How to fill this page:</b> choose your CV file in step 0. Lock &amp; Land reads it and fills in most fields for you. Check them, add what's missing (marked in orange), tick the box, and press <b>Save criteria</b> at the bottom.</p>
+    <p class="muted"><small>After this, the Configuration page walks you through the free local AI and, if you like, your Gmail. You can come back to this page any time from <b>Job criteria</b>.</small></p></div>`}
+  ${V.about?`<div class="step"><h2>0. You and your CV</h2><p class="muted"><small>Letters and answers only ever use facts from this CV, in your own words. ${V.about.has_profile?'Saving again rebuilds your facts from the text below.':'Each bullet or sentence becomes one fact.'}</small></p>
+    <label style="margin-top:4px">Your CV file <b>(start here)</b> <span>(PDF or Word. Lock &amp; Land reads it and fills the fields below for you to check. Use a PDF if you can: that's the file attached to applications${V.about.cv_pdf?'; current: '+esc(V.about.cv_pdf):''})</span></label><input type="file" id="a_pdf" accept="${ACCEPT}" onchange="cvFile(this)"><small id="a_cvmsg" class="muted"></small>
+    <div class="two"><div><label>Full name</label><input type="text" id="a_name" value="${esc(V.about.name)}"></div>
+    <div><label>Email <span>(your Gmail address if you have one: applications are sent from it)</span></label><input type="text" id="a_email" value="${esc(V.about.email)}"></div></div>
+    <div class="two"><div><label>Phone <span>(optional)</span></label><input type="text" id="a_phone" value="${esc(V.about.phone)}"></div>
+    <div><label>LinkedIn URL <span>(optional)</span></label><input type="text" id="a_linkedin" value="${esc(V.about.linkedin)}"></div></div>
+    <label>Current or last job title <span>(exactly as on your CV)</span></label><input type="text" id="a_title" value="${esc(V.about.current_title)}">
+    <label>Your CV as text <span>(filled in when you choose your CV file above; or paste it: one achievement or duty per line)</span></label><textarea id="a_cv" style="min-height:220px">${esc(V.about.cv_text)}</textarea>
+    <button class="btn" type="button" onclick="fillFromCv($('#a_cv').value)" style="margin-top:8px">Fill the fields below from this CV</button>
+    <label class="opt"><input type="checkbox" id="a_confirm" ${V.about.has_profile?'checked':''}>Everything in this CV text is accurate. Lock &amp; Land may only claim what it says.</label>
+  </div>`:`<div class="step"><h2>Fill from your CV</h2><p class="muted"><small>Choose your CV (PDF, Word or text) and every field it answers is filled in for you to check. Your facts and attached CV stay as they are.</small></p>
+    <input type="file" id="f_cv" accept="${ACCEPT}" onchange="cvFile(this)"><small id="a_cvmsg" class="muted"></small></div>`}
+  <div id="cvsum" class="muted"></div>
+  <div class="step"><h2>1. What jobs?</h2><p class="muted"><small>Any kind of job works: these drive every search, filter and score.</small></p>
+    <label>Roles / job titles to search <span>(one per line)</span></label><textarea id="roles">${esc(lines(V.roles))}</textarea>
+    <div class="two"><div><label>Main target <span>(one line)</span></label><input type="text" id="primary" value="${esc(V.primary)}"></div>
+    <div><label>Second choice <span>(optional)</span></label><input type="text" id="secondary" value="${esc(V.secondary)}"></div></div>
+    <label>Words a job title must contain <span>(optional, comma separated. Big job sites list every kind of job, so only titles with one of these words are kept. Empty = the roles above)</span></label><textarea id="title_words">${esc(csv(V.title_words))}</textarea>
+    <label>Seniority</label><div class="chips" id="sen_box">${V.seniority_options.map(x=>`<label><input type="checkbox" name="sen" value="${x}" ${V.seniority.includes(x)?'checked':''}>${x}</label>`).join('')}</div>
+  </div>
+  <div class="step"><h2>2. Skills and deal-breakers</h2>
+    <label>Your key skills / tools <span>(comma separated, e.g. "AutoCAD, project management". Each one found in an ad raises its score)</span></label><textarea id="skills">${esc(csv(V.skills))}</textarea>
+    <label>An ad must mention at least one of <span>(optional, comma separated)</span></label><textarea id="must_have">${esc(csv(V.must_have))}</textarea>
+    <label>Skip titles containing <span>(optional, comma separated, e.g. "intern, sales")</span></label><textarea id="exclude_titles">${esc(csv(V.exclude_titles))}</textarea>
+    <label>Score down jobs that are <span>(optional, comma separated, e.g. "night shifts, door-to-door sales")</span></label><input type="text" id="avoid" value="${esc(csv(V.avoid))}">
+  </div>
+  <div class="step"><h2>3. Where and how</h2>
+    <div class="two"><div><label>Home city <span>(search, or pick on the map)</span></label><input type="hidden" id="home_city" value="${esc(V.home_city)}"></div>
+    <div><label>Location shown on applications</label><input type="text" id="location" value="${esc(V.location)}"></div></div>
+    <button class="btn" type="button" id="mapbtn" onclick="toggleMap()" style="margin-top:10px">Choose your area on a map</button>
+    <div id="mapwrap" hidden><div id="map"></div>
+      <div class="maprow"><label for="radius" style="margin:0">Commute radius: <b id="rkm">20</b> km</label><input type="range" id="radius" min="2" max="100" value="20" oninput="setRadius(this.value)">
+      <button class="btn" type="button" onclick="addTowns()">Add the towns in this circle</button></div>
+      <small id="mapmsg" class="muted">Click the map where you live (or search your city above), set how far you'd travel, then add the towns in the circle to your commuting towns.</small></div>
+    <label>Towns within commuting distance <span>(hybrid/on-site jobs elsewhere go to "Relocation"; ads that shorten or translate a name, like "Hospitalet" or "San Cugat", still count)</span></label><input type="hidden" id="commute_towns" value="${esc(csv(V.commute_towns))}">
+    <label>Work mode</label><div id="mode_box">${Object.entries(V.work_modes).map(([k,t])=>`<label class="opt"><input type="radio" name="mode" value="${k}" ${V.work_mode===k?'checked':''}>${esc(t)}</label>`).join('')}</div>
+    <label>Remote jobs must be open to <span>(a country first, then regions, e.g. Spain, EU)</span></label><input type="hidden" id="remote_regions" value="${esc(csv(V.remote_regions))}">
+    <label>Jooble search locations <span>(optional; only used once you add a free Jooble key on Configuration. Empty = your home city and country)</span></label><input type="hidden" id="jooble_locations" value="${esc(csv(V.jooble_locations))}">
+  </div>
+  <div class="step"><h2>4. Pay, languages, freshness</h2>
+    <div class="two"><div><label>Minimum salary <span>(EUR gross/year; scoring only, never stated to employers)</span></label><input type="number" id="min_salary" value="${V.min_salary||''}"></div>
+    <div><label>Minimum for fully on-site jobs <span>(EUR)</span></label><input type="number" id="onsite_min_salary" value="${V.onsite_min_salary||''}"></div></div>
+    <label>Languages you speak <span>(jobs requiring others are skipped)</span></label><input type="hidden" id="languages" value="${esc(csv(V.languages))}">
+    <label>Ignore ads older than <span>(days; 14 is a good start)</span></label><input type="number" id="max_age_days" value="${V.max_age_days}" style="max-width:120px">
+  </div>`;
+  $('#main').addEventListener('input',touch);$('#main').addEventListener('change',touch);
+  GEO=V.home_geo||null;
+  picker('home_city',{single:true,geo:true,ph:'Search a city or town…'});
+  picker('commute_towns',{geo:true,names:true,ph:'Add a town…'});
+  picker('remote_regions',{options:V.region_options,ph:'Add a country or region…'});
+  picker('jooble_locations',{geo:true,names:true,ph:'Add a city or country…'});
+  picker('languages',{options:V.language_options,ph:'Add a language…'});
+}
+// ---------- searchable pickers: chips + a dropdown of suggestions (lists, or places from OpenStreetMap) ----------
+const rank=(x,f)=>{x=fold(x);return x===f?0:x.startsWith(f)?1:2};
+const PK={}, fold=t=>(t||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const pkVals=id=>{const v=$('#'+id).value.trim();return PK[id].single?(v?[v]:[]):v.split(',').map(x=>x.trim()).filter(Boolean)};
+function pkSet(id,arr,user=true){const el=$('#'+id),seen=new Set();arr=arr.filter(x=>{const f=fold(x);if(!x||seen.has(f))return false;seen.add(f);return true});
+  el.value=PK[id].single?(arr[arr.length-1]||''):arr.join(', ');pkRender(id);if(user)touch({target:el})}
+function picker(id,o){const el=$('#'+id);if(!el)return;PK[id]=o;
+  el.insertAdjacentHTML('afterend',`<div class="pk" id="pk_${id}"><span class="pkc"></span><input class="pkq" autocomplete="off" placeholder="${esc(o.ph||'')}"><div class="pkdd" hidden></div></div>`);
+  const box=$('#pk_'+id),q=box.querySelector('.pkq'),dd=box.querySelector('.pkdd');let items=[],hi=0,timer=null,seq=0;
+  box.addEventListener('click',e=>{const x=e.target.closest('[data-rm]');if(x){pkSet(id,pkVals(id).filter((_,i)=>i!=x.dataset.rm));return}if(e.target===box||e.target.classList.contains('pkc'))q.focus()});
+  const show=()=>{dd.hidden=!items.length;dd.innerHTML=items.map((it,i)=>`<div class="pko${i===hi?' on':''}" data-i="${i}">${esc(it.label||it.name)}${it.extra?` <small class="muted">${esc(it.extra)}</small>`:''}</div>`).join('')};
+  const choose=it=>{if(!it)return;const name=it.name;clearTimeout(timer);seq++;q.value='';items=[];show();
+    if(o.single){pkSet(id,[name]);if(id==='home_city'&&it.lat!=null){GEO={lat:it.lat,lon:it.lon,km:GEO&&GEO.km||Number($('#radius').value)};
+      if(!$('#location').value.trim()&&it.country){$('#location').value=name+', '+it.country}if(MAP)placeHome(GEO.lat,GEO.lon,true)}}
+    else pkSet(id,[...pkVals(id),name])};
+  dd.addEventListener('mousedown',e=>{const d=e.target.closest('.pko');if(d){e.preventDefault();choose(items[+d.dataset.i])}});
+  q.addEventListener('input',()=>{const t=q.value.trim();hi=0;const f=fold(t);
+    const have=new Set(pkVals(id).map(fold));
+    const local=(o.options||[]).filter(x=>!have.has(fold(x))&&(!f||fold(x).includes(f))).sort((a,b)=>rank(a,f)-rank(b,f)).slice(0,10).map(x=>({name:x}));
+    items=local;if(t&&!o.options)items=[{name:t,extra:'press Enter to add as typed'}];show();
+    if(o.geo&&t.length>=2){clearTimeout(timer);const my=++seq;timer=setTimeout(async()=>{
+      try{const r=await fetch('/api/geo/search?q='+encodeURIComponent(t));const d=await r.json();if(my!==seq||document.activeElement!==q)return;
+        if(!r.ok){items=[{name:t,extra:'offline: press Enter to add as typed'}];show();return}
+        items=d.filter(p=>!have.has(fold(p.name))).map(p=>({name:p.name,label:p.label,lat:p.lat,lon:p.lon,country:p.country}));
+        if(!items.some(p=>fold(p.name)===f))items.push({name:t,extra:'as typed'});show()}catch(e){}},350)}});
+  q.addEventListener('focus',()=>{if(o.options&&!q.value)q.dispatchEvent(new Event('input'))});
+  q.addEventListener('blur',()=>setTimeout(()=>{items=[];show()},150));
+  q.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(items.length){hi=(hi+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;show()}}
+    else if(e.key==='Enter'||(e.key===','&&!o.single)){e.preventDefault();const t=q.value.trim();if(items[hi])choose(items[hi]);else if(t&&!pkVals(id).some(v=>fold(v).startsWith(fold(t))))choose({name:t});else{q.value=''}}
+    else if(e.key==='Backspace'&&!q.value){const v=pkVals(id);if(v.length)pkSet(id,v.slice(0,-1))}
+    else if(e.key==='Escape'){items=[];show()}});
+  pkRender(id)}
+function pkRender(id){const box=$('#pk_'+id);if(!box)return;const v=pkVals(id);
+  box.querySelector('.pkc').innerHTML=v.map((x,i)=>`<span class="pkchip">${esc(x)}<button type="button" data-rm="${i}" aria-label="Remove ${esc(x)}">×</button></span>`).join('');
+  box.querySelector('.pkq').placeholder=PK[id].single&&v.length?'Change…':(PK[id].ph||'')}
+// ---------- map: free OpenStreetMap tiles through this app (cached), Leaflet bundled with the app ----------
+let MAP=null,PIN=null,CIRCLE=null,GEO=null;
+async function loadLeaflet(){if(window.L)return;  // bundled with the app, read through fetch (works in the app window too)
+  const get=async u=>{const r=await fetch(u);if(!r.ok)throw new Error('The map library did not load');return r.text()};
+  const [css,js]=await Promise.all([get('/static/leaflet/leaflet.css'),get('/static/leaflet/leaflet.js')]);
+  const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+  const sc=document.createElement('script');sc.textContent=js;document.head.appendChild(sc);if(!window.L)throw new Error('The map library did not load')}
+// map tiles through the app (cached there), as images made from fetched bytes
+function tileLayer(){const T=L.GridLayer.extend({createTile(c,done){const img=document.createElement('img');img.alt='';
+  fetch(`/api/geo/tile/${c.z}/${c.x}/${c.y}.png`).then(r=>{if(!r.ok)throw new Error('tile');return r.blob()})
+    .then(b=>{const u=URL.createObjectURL(b);img.onload=()=>{URL.revokeObjectURL(u);done(null,img)};img.src=u}).catch(e=>done(e,img));return img}});
+  return new T({maxZoom:17,tileSize:256,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'})}
+async function toggleMap(){const w=$('#mapwrap');w.hidden=!w.hidden;$('#mapbtn').textContent=w.hidden?'Choose your area on a map':'Hide the map';if(w.hidden)return;
+  try{await loadLeaflet()}catch(e){$('#mapmsg').className='bad';$('#mapmsg').textContent=e.message;return}
+  if(MAP){MAP.invalidateSize();return}
+  MAP=L.map('map',{zoomControl:true}).setView([40.2,-3.7],5);
+  const tl=tileLayer().addTo(MAP);
+  let warned=false;tl.on('tileerror',()=>{if(warned)return;warned=true;const m=$('#mapmsg');m.className='bad';m.textContent='The map needs internet to show. You can still search and type your towns above.'});
+  MAP.on('click',async e=>{placeHome(e.latlng.lat,e.latlng.lng,false);
+    try{const r=await fetch(`/api/geo/reverse?lat=${e.latlng.lat}&lon=${e.latlng.lng}`);const d=await r.json();
+      if(r.ok&&d.name){pkSet('home_city',[d.name]);if(!$('#location').value.trim()||$('#location').classList.contains('frommap')){$('#location').value=d.name+(d.country?', '+d.country:'');$('#location').classList.add('frommap')}}}catch(_){}});
+  if(GEO){$('#radius').value=GEO.km||20;placeHome(GEO.lat,GEO.lon,true)}
+  else if(pkVals('home_city')[0]){try{const d=await (await fetch('/api/geo/search?q='+encodeURIComponent(pkVals('home_city')[0]))).json();if(d[0])placeHome(d[0].lat,d[0].lon,true)}catch(_){}}
+  setRadius($('#radius').value)}
+function placeHome(lat,lon,fly){if(!MAP)return;GEO={lat,lon,km:Number($('#radius').value)};
+  const acc=getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()||'#c2410c';
+  if(!PIN)PIN=L.circleMarker([lat,lon],{radius:8,color:'#fff',weight:3,fillColor:acc,fillOpacity:1}).addTo(MAP);else PIN.setLatLng([lat,lon]);
+  if(!CIRCLE)CIRCLE=L.circle([lat,lon],{radius:GEO.km*1000,color:getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()||'#c2410c',weight:2,fillOpacity:.08}).addTo(MAP);else CIRCLE.setLatLng([lat,lon]);
+  if(fly)MAP.fitBounds(CIRCLE.getBounds(),{padding:[20,20]})}
+function setRadius(v){$('#rkm').textContent=v;if(GEO)GEO.km=Number(v);if(CIRCLE){CIRCLE.setRadius(v*1000)}}
+async function addTowns(){const m=$('#mapmsg');if(!GEO){m.className='bad';m.textContent='Click the map where you live first.';return}
+  m.className='muted';m.textContent='Finding towns in the circle…';
+  try{const r=await fetch(`/api/geo/towns?lat=${GEO.lat}&lon=${GEO.lon}&km=${GEO.km}`);const d=await r.json();if(!r.ok)throw new Error(d.detail||r.statusText);
+    const home=fold(pkVals('home_city')[0]||''),cur=pkVals('commute_towns');const add=d.map(t=>t.name).filter(n=>fold(n)!==home&&!cur.some(c=>fold(c)===fold(n))).slice(0,150);
+    pkSet('commute_towns',[...cur,...add]);m.className='ok';
+    m.textContent=add.length?`Added ${add.length} town${add.length===1?'':'s'} within ${GEO.km} km, nearest first. Remove any with ×.`:'No new towns in that circle.'}
+  catch(e){m.className='bad';m.textContent=e.message}}
+const ACCEPT='.pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+// ---------- fill from the CV: fills what the CV answers, marks the rest, never silently replaces your edits ----------
+const TOUCHED=new Set(), LINES=['roles'], CSV=['title_words','skills','remote_regions','languages','commute_towns'];
+const NAMES={a_name:'Full name',a_email:'Email',a_phone:'Phone',a_linkedin:'LinkedIn URL',a_title:'Current or last job title',roles:'Roles',
+  primary:'Main target',secondary:'Second choice',title_words:'Title words',seniority:'Seniority',skills:'Key skills',home_city:'Home city',
+  location:'Location on applications',remote_regions:'Remote jobs open to',languages:'Languages',work_mode:'Work mode',min_salary:'Minimum salary',
+  onsite_min_salary:'Minimum for on-site',commute_towns:'Commuting towns'};
+function touch(e){const t=e.target;if(!t||t.type==='file')return;const k=t.name==='sen'?'seniority':t.name==='mode'?'work_mode':t.id;
+  if(!k)return;TOUCHED.add(k);const L=labelOf(k);if(L)L.querySelectorAll('.tag').forEach(x=>x.remove());t.classList&&t.classList.remove('fromcv');const b=$('#pk_'+k);if(b)b.classList.remove('fromcv')}
+function labelOf(k){const el=k==='seniority'?$('#sen_box'):k==='work_mode'?$('#mode_box'):$('#'+k);if(!el)return null;
+  const p=el.previousElementSibling;return p&&p.tagName==='LABEL'?p:null}
+function getField(k){if(k==='seniority')return [...document.querySelectorAll('input[name=sen]:checked')].map(x=>x.value).join(',');
+  const el=$('#'+k);return el?el.value.trim():null}
+function fmt(k,v){return Array.isArray(v)?(k==='seniority'?v.join(','):LINES.includes(k)?v.join('\n'):v.join(', ')):String(v??'')}
+function setField(k,v){if(k==='seniority'){document.querySelectorAll('input[name=sen]').forEach(x=>x.checked=v.includes(x.value));return}
+  const el=$('#'+k);el.value=fmt(k,v);el.classList.add('fromcv');if(PK[k]){pkRender(k);$('#pk_'+k).classList.add('fromcv')}}
+function tag(k,cls,text){const L=labelOf(k);if(!L)return;L.querySelectorAll('.tag').forEach(x=>x.remove());L.insertAdjacentHTML('beforeend',` <em class="tag ${cls}">${text}</em>`)}
+async function fillFromCv(text){const m=$('#a_cvmsg'),sum=$('#cvsum');
+  if(!text||text.trim().length<80){m.className='bad';m.textContent=' Add your CV first: choose the file or paste its text.';return}
+  m.className='muted';m.textContent=' Reading your CV to fill the fields… (with the local AI this can take a minute)';
+  try{const r=await fetch('/api/setup/cv-fill',{method:'POST',headers:{'Content-Type':'application/json','X-Jobhunter':'1'},body:JSON.stringify({text,background:true})});
+    const s0=await r.json();if(!r.ok)throw new Error(s0.detail||r.statusText);
+    let st=s0;
+    while(st.state==='running'){await new Promise(ok=>setTimeout(ok,1500));
+      const q=await fetch('/api/setup/cv-fill',{headers:{'X-Jobhunter':'1'}});st=await q.json();if(!q.ok)throw new Error(st.detail||q.statusText);
+      if(st.state==='running')m.textContent=` Reading your CV to fill the fields… ${st.elapsed||0} s (with the local AI this can take a minute; you can keep editing)`}
+    if(st.state!=='done')throw new Error(st.detail||'Reading the CV failed');
+    const d=st.result;
+    const fresh=[],clash=[];
+    for(const [k,v] of Object.entries(d.values)){const cur=getField(k);if(cur===null)continue;const nv=fmt(k,v);
+      if(!nv||cur===nv)continue;(cur===''?fresh:clash).push(k)}
+    let take=[...fresh];
+    if(clash.length){const yours=clash.filter(k=>TOUCHED.has(k)),saved=clash.filter(k=>!TOUCHED.has(k));
+      const msg='Your CV gives different values for fields that already have something in them:\n\n'+clash.map(k=>'• '+NAMES[k]+(TOUCHED.has(k)?' (you edited this)':'')).join('\n')+'\n\nReplace them with what the CV says? (Cancel keeps yours and only fills the empty fields.)';
+      if(confirm(msg))take=take.concat(clash)}
+    take.forEach(k=>{setField(k,d.values[k]);tag(k,'cv','from your CV')});
+    const need=d.missing.filter(k=>getField(k)===''||k==='work_mode');
+    need.forEach(k=>tag(k,'need',k==='work_mode'?'not in your CV: check this':'not in your CV: fill this in'));
+    const kept=Object.keys(d.values).filter(k=>d.values[k]&&d.values[k].length!==0&&!take.includes(k)&&getField(k)!==fmt(k,d.values[k]));
+    m.className='ok';m.textContent=` Filled ${take.length} field${take.length===1?'':'s'} from your CV.`;
+    sum.className='muted';sum.innerHTML=`<small>${esc(d.note)} Fields marked <em class="tag cv">from your CV</em> were filled in: check them. Fields marked <em class="tag need">not in your CV</em> are yours to fill in.${kept.length?' Kept your own values for: '+kept.map(k=>esc(NAMES[k])).join(', ')+'.':''}</small>`;
+    const first=document.querySelector('.step .tag.need');if(first)first.closest('.step').scrollIntoView({behavior:'smooth',block:'start'});}
+  catch(e){m.className='bad';m.textContent=' '+e.message}}
+const dataUrl=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f)});
+async function cvFile(inp){const f=inp.files[0],m=$('#a_cvmsg');if(!f)return;m.className='muted';m.textContent=' Reading '+f.name+'…';
+  try{const r=await fetch('/api/setup/cv-text',{method:'POST',headers:{'Content-Type':'application/json','X-Jobhunter':'1'},body:JSON.stringify({name:f.name,b64:await dataUrl(f)})});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||r.statusText);
+    const ta=$('#a_cv');
+    if(ta){if(ta.value.trim()&&ta.value.trim()!==d.text.trim()&&!confirm('Replace the CV text in the box with the text from '+f.name+'?')){m.textContent='';return}
+      ta.value=d.text;TOUCHED.delete('a_cv')}
+    await fillFromCv(d.text);
+    if(ta&&$('#a_cvmsg').className==='ok'){m.textContent+=` The CV text is in the box above: fix anything the file layout jumbled, then tick the box and save.`;
+      if(!/\.pdf$/i.test(f.name))m.textContent+=' (Only a PDF gets attached to applications.)'}}
+  catch(e){m.className='bad';m.textContent=' '+e.message}}
+async function save(){
+  const g=id=>$('#'+id).value;
+  const body={roles:g('roles'),primary:g('primary'),secondary:g('secondary'),title_words:g('title_words'),skills:g('skills'),must_have:g('must_have'),
+    exclude_titles:g('exclude_titles'),avoid:g('avoid'),home_city:g('home_city'),location:g('location'),commute_towns:g('commute_towns'),
+    work_mode:(document.querySelector('input[name=mode]:checked')||{}).value,remote_regions:g('remote_regions'),jooble_locations:g('jooble_locations'),
+    min_salary:g('min_salary'),onsite_min_salary:g('onsite_min_salary'),languages:g('languages'),max_age_days:g('max_age_days'),
+    seniority:[...document.querySelectorAll('input[name=sen]:checked')].map(x=>x.value),home_geo:GEO};
+  if(V.about){let f=$('#a_pdf').files[0];if(f&&!/\.pdf$/i.test(f.name))f=null;
+    body.about={name:g('a_name'),email:g('a_email'),phone:g('a_phone'),linkedin:g('a_linkedin'),current_title:g('a_title'),cv_text:g('a_cv'),confirm:$('#a_confirm').checked,
+      cv_pdf_b64:f?await dataUrl(f):''};}
+  const m=$('#msg');m.className='muted';m.textContent='Saving…';
+  try{const r=await fetch('/api/setup',{method:'POST',headers:{'Content-Type':'application/json','X-Jobhunter':'1'},body:JSON.stringify(body)});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||r.statusText);
+    m.className='ok';m.textContent='Saved. The next fetch uses these criteria.'+(d.facts?` ${d.facts} facts taken from your CV.`:'');setTimeout(()=>jhGo('/configuration'),1200)}
+  catch(e){m.className='bad';m.textContent=e.message}
+}
+load();
+</script>
+</body>
+</html>

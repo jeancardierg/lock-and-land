@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lock &amp; Land: configuration</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1b;--muted:#6b6b66;--line:#e3e2dc;--ok:#1a7f37;--warn:#9a5b00;--bad:#c8261d;--acc:#c2410c;--chip:#efeee9}
+@media (prefers-color-scheme:dark){:root{--bg:#161614;--card:#1f1f1c;--ink:#ecebe6;--muted:#a3a29b;--line:#34332e;--ok:#4cc26e;--warn:#e0a643;--bad:#ff6b5f;--acc:#f26b2a;--chip:#2c2b27}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+header{display:flex;gap:16px;align-items:center;padding:12px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2;flex-wrap:wrap}
+header h1{font-size:17px;margin:0}header a{color:var(--muted);text-decoration:none;font-size:14px}header a:hover{color:var(--ink)}
+main{max-width:860px;margin:0 auto;padding:20px 16px 80px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.card h2{font-size:16.5px;margin:0 0 2px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.st{font-size:12.5px;border-radius:999px;padding:1px 10px;background:var(--chip);font-weight:600}
+.st.ok{color:var(--ok)}.st.warn{color:var(--warn)}.st.bad{color:var(--bad)}.st.mute{color:var(--muted)}
+.muted{color:var(--muted)}small{font-size:13px}p{margin:6px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+input[type=text],input[type=password],textarea{font:inherit;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);flex:1 1 220px;min-width:0}
+textarea{width:100%;min-height:90px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+.btn{font:inherit;padding:7px 14px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.btn.go{background:var(--acc);border-color:var(--acc);color:#fff}.btn:disabled{opacity:.55;cursor:default}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}td{border-bottom:1px solid var(--line);padding:7px 4px;vertical-align:top}
+td:first-child{width:34%}code{font-size:12.5px;background:var(--chip);padding:1px 5px;border-radius:5px;word-break:break-all}
+.banner{border-left:4px solid var(--warn);background:var(--card);border-radius:10px;padding:12px 16px;margin-bottom:14px}
+.key{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:var(--chip);padding:10px;border-radius:8px;word-break:break-all;user-select:all}
+#toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:9px;display:none;z-index:5;max-width:90vw}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:26px 0 8px}
+ol.steps{margin:8px 0 4px;padding-left:22px}ol.steps li{margin:4px 0;font-size:14px}ol.steps a{color:var(--acc)}
+ol.todo{list-style:none;margin:10px 0 4px;padding:0}ol.todo li{display:flex;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}ol.todo li:last-child{border-bottom:0}
+ol.todo li>div{flex:1}ol.todo .tick{flex:0 0 24px;height:24px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
+ol.todo li.done .tick{background:var(--ok);border-color:var(--ok)}ol.todo li.done b{color:var(--muted)}
+details>summary{cursor:pointer}details.card>summary{list-style:none}details.card>summary::-webkit-details-marker{display:none}
+.bar2{height:6px;background:var(--chip);border-radius:9px;overflow:hidden;margin:6px 0}.bar2 span{display:block;height:100%;background:var(--acc);transition:width .4s}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+/* motion ("Lock-on"): playful but quick, never blocks input */
+:root{--ease:cubic-bezier(.2,.7,.3,1);--spring:cubic-bezier(.34,1.56,.64,1)}
+.btn,.bar button,nav button,.chipf,.jr,header a{transition:background-color .14s ease,border-color .14s ease,color .14s ease,transform .12s ease}
+.btn:active,.bar button:active{transform:scale(.95)}
+main{animation:jh-in .22s var(--ease) both}
+.enter{animation:jh-spring .45s var(--spring) both}
+@keyframes jh-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes jh-spring{from{opacity:0;transform:scale(.9) translateY(10px)}to{opacity:1;transform:none}}
+.card{position:relative}
+.hit{animation:jh-hit .32s cubic-bezier(.5,-.4,.7,1) both;pointer-events:none}
+.miss{animation:jh-miss .42s ease-in both;pointer-events:none}
+@keyframes jh-hit{0%{transform:none}30%{transform:scale(1.03)}100%{opacity:0;transform:translate(45%,-35%) scale(.4) rotate(10deg)}}
+@keyframes jh-miss{0%{transform:none}20%{transform:translateX(-8px) rotate(-1deg)}40%{transform:translateX(8px) rotate(1deg)}100%{opacity:0;transform:translateX(-110%) rotate(-5deg)}}
+.reticle{position:absolute;left:50%;top:120px;width:150px;height:150px;margin-left:-75px;pointer-events:none;z-index:3;animation:jh-lock .38s cubic-bezier(.2,.9,.3,1.2) both}
+.reticle circle.dot{animation:jh-dot .38s ease-out both}
+@keyframes jh-lock{0%{opacity:0;transform:scale(1.8) rotate(-90deg)}70%{opacity:1;transform:scale(.95) rotate(4deg)}100%{opacity:1;transform:none}}
+@keyframes jh-dot{0%,60%{r:0}80%{r:9}100%{r:6}}
+.reasons.on,.det.enter{animation:jh-spring .3s var(--spring) both}
+#toast{display:block!important;opacity:0;visibility:hidden;transform:translate(-50%,-14px) scale(.8);transition:opacity .2s ease,transform .35s var(--spring),visibility .2s}
+#toast.show{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1)}
+#busy{position:fixed;top:0;left:0;right:0;height:3px;overflow:hidden;z-index:6;opacity:0;transition:opacity .2s;pointer-events:none}
+#busy.on{opacity:1}#busy::after{content:"";position:absolute;inset:0;width:35%;background:var(--acc);animation:jh-load 1.1s ease-in-out infinite}
+@keyframes jh-load{from{transform:translateX(-100%)}to{transform:translateX(300%)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;animation-delay:0s!important;transition-duration:1ms!important}#busy::after{animation:none;width:100%;opacity:.5}.reticle{display:none}}
+</style>
+</head>
+<body>
+<header><h1>Lock &amp; Land</h1><a href="/">&larr; Review</a><a href="/setup">Job criteria</a><span class="muted" style="margin-left:auto;font-size:13px" id="home"></span></header>
+<div id="toast" role="status" aria-live="polite"></div><div id="busy" aria-hidden="true"></div>
+<main id="main"><p class="muted">Loading…</p></main>
+<script>
+const copyText=t=>window.jhCopy?window.jhCopy(t):navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject(new Error('Copy is not available here: select the text and press Ctrl+C'));
+window.jhGo=window.jhGo||(p=>{location.href=p});  // in the app window, pages load through the app
+const $=s=>document.querySelector(s), esc=s=>(s??'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S=null, poll=null;
+function toast(m,ms=4000){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),ms)}
+const busy={n:0,t:0,go(){if(!this.n++)this.t=setTimeout(()=>$('#busy').classList.add('on'),150)},done(){if(!--this.n){clearTimeout(this.t);$('#busy').classList.remove('on')}}};
+async function api(path,body){busy.go();try{const r=await fetch(path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-Jobhunter':'1'},body:body===undefined?undefined:JSON.stringify(body)});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||r.statusText);return d}finally{busy.done()}}
+const pill=(cls,t)=>`<span class="st ${cls}">${esc(t)}</span>`;
+function gmailPill(g){return {ok:pill('ok','Signed in'),expiring:pill('warn','Expires soon'),expired:pill('bad','Sign-in expired'),missing:pill('bad','Not signed in'),no_client:pill('bad','Needs OAuth client'),error:pill('warn','Could not check')}[g.state]||pill('mute',g.state)}
+async function load(refresh){
+  try{S=await api('/api/connections'+(refresh?'?refresh=1':''))}catch(e){$('#main').innerHTML=`<p class="bad">${esc(e.message)}</p>`;return}
+  render();
+  const busy=[S.gmail.signin,S.ollama.pull].some(j=>j&&j.state==='running');
+  clearTimeout(poll); if(busy) poll=setTimeout(()=>load(false),2500);
+}
+const IS_MAC=/mac/i.test(navigator.platform||navigator.userAgent), IS_WIN=/win/i.test(navigator.platform||navigator.userAgent);
+const ext=(u,t)=>`<a href="${esc(u)}" target="_blank" rel="noopener">${t}</a>`;
+const gmailOk=g=>g.state==='ok'||g.state==='expiring';
+let TESTS={}, SHOW_OAUTH=false;  // last key test per job board: {ok, detail}
+// Help for the free job-board keys, step by step, for people who have never seen an API key.
+const KEYHOW={
+  jooble:{what:'Lots of Spanish job sites in one search. Free.',steps:[`Open ${ext('https://es.jooble.org/api/about','es.jooble.org/api/about')} and fill in the short form (your name and email are enough; for "website" you can write <i>personal use</i>).`,'Jooble emails you a key, usually within a day. It is a long code of letters, numbers and dashes.','Copy the key from that email, paste it below and press <b>Save</b>. Lock &amp; Land checks it straight away.']},
+  careerjet:{what:'Every kind of job from Spanish job sites. Free.',steps:[`Open ${ext('https://www.careerjet.es/partners/','careerjet.es/partners')} and sign up as a <b>publisher</b> (free).`,'In your Careerjet account, find the <b>API key</b>.','Paste it below and press <b>Save</b>. Lock &amp; Land checks it straight away.']},
+  findwork:{what:'Mostly tech jobs. Free.',steps:[`Create a free account at ${ext('https://findwork.dev/','findwork.dev')}.`,'Your <b>API key</b> is on your account page.','Paste it below and press <b>Save</b>.']},
+  themuse:{what:'Works without a key. A free key only helps if The Muse starts refusing searches.',steps:[`Optional: get a free key at ${ext('https://www.themuse.com/developers','themuse.com/developers')}.`]},
+};
+function stepsHtml(list){return `<ol class="steps">${list.map(s=>`<li>${s}</li>`).join('')}</ol>`}
+function render(){
+  const g=S.gmail, db=S.database, d=S.disk, o=S.ollama; let h='';
+  $('#home').textContent='Data folder: '+S.home;
+  // ---------- Getting started: the five things a new person does, in order ----------
+  const aiDone=o.state==='ok'&&!S.setup_needed.includes('ai'), aboutDone=S.criteria_done&&S.facts;
+  const jooble=S.sources.find(s=>s.key==='jooble')||{};
+  const steps=[
+    {done:aboutDone,t:'Tell Lock &amp; Land about you',d:'Add your CV and say what jobs you want. About 5 minutes.',go:`<button class="btn go" onclick="jhGo('/setup')">Open</button>`},
+    {done:aiDone,t:'Set up the free local AI',d:'It writes your cover letters on this computer. Install it once, then download the models (a big download).',go:`<a class="btn${aboutDone&&!aiDone?' go':''}" href="#aicard">Show me</a>`},
+    {done:gmailOk(g),opt:true,t:'Connect your Gmail',d:'Optional. Reads job alerts and recruiter emails, and sends the applications you approve.',go:`<a class="btn" href="#gmail">Show me</a>`},
+    {done:jooble.state==='ok',opt:true,t:'Add more job sites',d:'Optional. Free keys for Jooble and others find many more jobs in Spain.',go:`<a class="btn" href="#sources">Show me</a>`},
+    {done:S.recovery_saved,t:'Save your recovery key',d:'A spare key to your data, in case you change computer.',go:`<a class="btn" href="#recovery">Show me</a>`},
+  ];
+  const left=steps.filter(s=>!s.done&&!s.opt).length;
+  h+=`<details class="card start" ${left?'open':''}><summary><h2 style="display:inline-flex">Getting started ${left?pill('warn',left+' to do'):pill('ok','All set')}</h2></summary>
+    <ol class="todo">${steps.map(s=>`<li class="${s.done?'done':''}"><span class="tick">${s.done?'&#10003;':''}</span><div><b>${s.t}</b>${s.opt?' <span class="muted">(optional)</span>':''}<br><small class="muted">${s.d}</small></div>${s.done?'':s.go}</li>`).join('')}</ol>
+    <p class="muted"><small>Stuck? Every step below says what to press. Lock &amp; Land never sends an application without you pressing Approve.</small></p></details>`;
+  const other=S.setup_needed.filter(x=>['db','cv','import','careerjet','findwork'].includes(x)||(x==='jooble'&&jooble.enabled));
+  if(other.length) h+=`<div class="banner"><b>Needs you:</b> ${other.map(x=>({import:'import your existing Lock &amp; Land data (below)',db:'<a href="#backups"><b>the daily database check found a problem</b>: restore a backup</a>',cv:`add the CV file (PDF) that applications attach on <a href="/setup">Job criteria</a> (${esc(S.cv_problem||'')})`,jooble:'add the Jooble key, or turn Jooble off',careerjet:'add the Careerjet key, or turn Careerjet off',findwork:'add the Findwork key, or turn Findwork off'})[x]||x).join(' · ')}</div>`;
+
+  if(S.legacy.length) h+=`<div class="card"><h2>Import your existing install ${pill('warn','Recommended')}</h2>
+    <p>Copies settings, CVs, facts, jobs and letters. The database is encrypted on the way in, and keys from <code>.env</code> and the Gmail token go into the keychain. The old folder keeps working until you retire it below.</p>
+    <div class="row"><select id="legacy" class="btn">${S.legacy.map(p=>`<option>${esc(p)}</option>`).join('')}</select><button class="btn go" onclick="doImport()">Import</button></div></div>`;
+
+  h+=`<h3 id="aih">Local AI</h3><div class="card" id="aicard">${aiHtml()}</div>`;
+  h+=`<h3>Email</h3><div class="card" id="gmail">${gmailHtml(g)}</div>`;
+  h+=`<h3>Phone alerts</h3><div class="card" id="telegram">${tgHtml(S.telegram)}</div>`;
+
+  h+=`<h3>Job sites</h3><p class="muted"><small>Sites marked <b>Free, no key</b> work straight away. The others need a free key: open one to see how to get it.</small></p><div class="card" id="sources"><table>`+S.sources.map(s=>{
+    let st=s.auth==='public'?pill('ok',s.secret?'Free, no key':'Free, no key'):s.auth==='via_gmail'?(gmailOk(g)?pill('ok','Via Gmail'):pill('warn','Needs Gmail')):s.state==='ok'?pill('ok','Key saved'):s.state==='blocked'?pill('warn','Paused'):pill(s.enabled?'bad':'mute','Needs a free key');
+    if(s.paid) st=pill('mute','Paid, optional')+' '+(s.state==='ok'?pill('ok','Keys saved'):'');
+    if(!s.enabled) st=pill('mute','Off')+' '+st;
+    const how=KEYHOW[s.key], t=TESTS[s.key];
+    let extra=`<div class="row"><button class="btn" onclick="toggleSource('${s.key}',${!s.enabled})">${s.enabled?'Turn off':'Turn on'}</button></div>`;
+    if(s.key==='adzuna'&&s.usage) extra+=`<p><small>Calls: ${s.usage.today}/${s.usage.per_day} today · ${s.usage.month}/${s.usage.per_month} this month${s.usage.blocked?` · <b class="warn">${esc(s.usage.blocked)}</b>`:''}</small></p>`;
+    if(s.secret){
+      const body=`${how?stepsHtml(how.steps):''}<div class="row"><input type="password" id="key_${s.key}" placeholder="Paste the ${esc(s.name.replace(/ \(.*\)/,''))} key here${s.optional_key?' (optional)':''}" autocomplete="off"><button class="btn go" onclick="saveKey('${s.key}','${s.secret}')">Save</button>${s.state==='ok'&&s.key!=='themuse'?`<button class="btn" onclick="testKey('${s.key}')">Test</button>`:''}</div>`;
+      extra+=s.state==='ok'&&!(t&&!t.ok)?`<details><summary class="muted"><small>Change the key</small></summary>${body}</details>`:`<details ${s.enabled&&s.state!=='ok'&&!s.optional_key?'open':''}><summary><small><b>How to get the free key</b></small></summary>${body}</details>`;
+      if(t) extra+=`<p class="${t.ok?'ok':'bad'}"><small>${t.ok?'&#10003; ':'&#9888; '}${esc(t.detail)}</small></p>`;
+    }
+    if(s.key==='adzuna') extra+=`<details><summary class="muted"><small>I have Adzuna keys</small></summary><div class="row"><input type="text" id="az_id" placeholder="App ID"><input type="password" id="az_key" placeholder="App key"><button class="btn go" onclick="adzuna()">Save and test</button>${s.state==='ok'?`<button class="btn" onclick="adzunaTest()">Test</button>`:''}</div></details>`;
+    return `<tr><td><b>${esc(s.name)}</b><br>${st}</td><td><small class="muted">${esc(how?how.what:s.note)}</small>${extra}</td></tr>`}).join('')+
+    `<tr><td><b>Indeed, Glassdoor, InfoJobs</b><br>${pill('mute','Not used')}</td><td><small class="muted">These sites don't let personal apps search them. Jooble covers many Spanish job sites instead.</small></td></tr></table></div>`;
+
+  h+=`<h3>Your data</h3><div class="card" id="recovery"><h2>Recovery key ${S.recovery_saved?pill('ok','Saved'):pill('warn','Not saved yet')}</h2>
+    <p>Your jobs and letters are locked with a key that this computer keeps for you. The <b>recovery key</b> is a spare copy. You only need it if you move to a new computer or reinstall ${IS_MAC?'macOS':'Windows'}.</p>
+    ${stepsHtml(['Press <b>Show recovery key</b> (the app asks you to confirm).','Press <b>Copy</b> and paste it into your password manager, or write it down and keep it somewhere safe. Don\'t email it to yourself.','Press <b>I\'ve saved it</b>.'])}
+    <div class="row"><button class="btn${S.recovery_saved?'':' go'}" onclick="showKey()" ${db.has_key?'':'disabled'}>Show recovery key</button>${S.recovery_saved?'':`<button class="btn" onclick="act(()=>api('/api/connections/recovery-key/saved',{}),'Great, marked as saved')">I've saved it</button>`}</div>
+    ${db.has_key?'':'<p class="muted"><small>The key is made the first time Lock &amp; Land saves a job. Come back after the first search.</small></p>'}
+    <div id="keyout"></div>
+    <details style="margin-top:8px"><summary class="muted"><small>New computer? Restore from a recovery key</small></summary><div class="row" id="rk"><input type="text" id="rkey" placeholder="xxxxxxxx-xxxxxxxx-…"><button class="btn go" onclick="restoreKey()">Restore</button></div></details>
+    ${db.health&&db.health.ok===false?`<p class="bad"><small>The daily check found a problem with the database: see <b>Daily check and backups</b> under Advanced.</small></p>`:''}</div>`;
+
+  // ---------- advanced: everything a tester can ignore ----------
+  const advOpen=(db.health&&db.health.ok===false)||(db.enabled&&db.plain_files.length)||S.legacy_secret_files.length||location.hash==='#backups';
+  h+=`<details id="adv" ${advOpen?'open':''}><summary><h3 style="display:inline">Advanced (you can ignore this)</h3></summary>`;
+  h+=`<div class="card"><h2>Where passwords and keys are kept ${pill(S.keychain.startsWith('unavailable')?'bad':'ok',keychainName())}</h2><p class="muted"><small>Backend: <code>${esc(S.keychain)}</code>. Look for entries named <b>jobhunter</b> (the app's internal name)${IS_WIN?' in Credential Manager &rarr; Windows Credentials':IS_MAC?' in Keychain Access':''}.</small></p></div>`;
+  h+=`<div class="card"><h2>Database encryption ${db.enabled&&!db.plain_files.length?pill('ok','AES-256 (SQLCipher)'):db.enabled?pill('warn',db.plain_files.length+' plain file(s)'):pill('bad','Off')}</h2>
+    <p class="muted"><small>${db.files.map(f=>`${esc(f.name)} ${f.encrypted?'&#128274;':'<b class="bad">plain</b>'}`).join(' · ')||'no databases yet'}</small></p>
+    ${db.plain_files.length&&db.enabled?`<div class="row"><button class="btn go" onclick="encryptAll()">Encrypt them now</button></div>`:''}</div>`;
+  {const hl=db.health||{}, bk=db.backups||[];
+   h+=`<div class="card" id="backups"><h2>Daily check and backups ${hl.ok===true?pill('ok','Healthy'):hl.ok===false?pill('bad','Problem found'):pill('mute','Not checked yet')}</h2>
+    <p class="muted"><small>Every day the database is checked and an encrypted copy is kept (the last 7). ${hl.at?'Last check: '+esc(hl.at.replace('T',' ').slice(0,16))+' UTC'+(hl.ok===false?' · '+esc(hl.detail):''):''}</small></p>
+    ${bk.length?`<div class="row"><select id="bkname">${bk.map(b=>`<option value="${esc(b.name)}">${esc(b.date)} · ${Math.round(b.bytes/1024)} KB</option>`).join('')}</select><button class="btn" onclick="restoreBackup()">Restore this backup</button></div>`:''}
+    <div class="row"><button class="btn" onclick="act(()=>api('/api/connections/backup/now',{}),'Checked and backed up')">Check and back up now</button></div></div>`}
+  h+=`<div class="card"><h2>Disk encryption ${d.on?pill('ok',d.tool+' on'):d.on===null?pill('mute','not checked'):pill('warn',d.tool+' off')}</h2><p class="muted"><small>${d.on?'Letters and logs are also protected by disk encryption.':'Optional extra protection. Your database is already encrypted; turning on '+esc(d.tool)+' also protects letters and logs if the computer is stolen.'}</small></p></div>`;
+  if(S.legacy_secret_files.length) h+=`<div class="card"><h2>Old install still has plain-text secrets ${pill('warn','Clean up')}</h2><p>After the app works for you, wipe the old <code>.env</code>, <code>token.json</code> and <code>credentials.json</code> (overwritten, then deleted). The old database is left alone.</p>${S.legacy_secret_files.map(p=>`<div class="row"><code>${esc(p)}</code><button class="btn" onclick="retire('${esc(p).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">Wipe secrets</button></div>`).join('')}</div>`;
+  const lm=S.last_move;
+  h+=`<div class="card"><h2>Data folder</h2><p><code>${esc(S.home)}</code></p>
+    <p class="muted"><small>Settings, CVs, facts, letters, logs and the encrypted databases. Sign-ins stay in the keychain whatever folder you pick.</small></p>
+    ${lm?`<p class="${lm.ok?'ok':'bad'}"><small>Last change: ${lm.ok?`moved to ${esc(lm.dst)}${lm.old_folder_kept_as?` · old folder kept as <code>${esc(lm.old_folder_kept_as)}</code> (delete it when you're happy)`:''}`:esc(lm.error||'failed')}</small></p>`:''}
+    <div class="row"><input type="text" id="newhome" placeholder="New folder, e.g. ${IS_MAC?'/Users/you/Documents/Lock and Land':'C:\\\\Users\\\\you\\\\Documents\\\\Lock and Land'}"></div>
+    <div class="row"><button class="btn go" onclick="moveHome('move')">Move my data there</button><button class="btn" onclick="moveHome('use')">Use that folder (already has Lock &amp; Land data)</button></div>
+    <p class="muted"><small>Lock &amp; Land restarts to do it${S.can_restart?'':' (quit and reopen it yourself: it is not running as the desktop app)'}. The old folder is renamed, not deleted.</small></p></div>`;
+  h+=`</details>`;
+  $('#main').innerHTML=h;
+  if(location.hash&&!render._jumped){render._jumped=true;const el=document.querySelector(location.hash);if(el)el.scrollIntoView()}
+}
+
+// ---------- Gmail: app password (easy, recommended) or Google sign-in (advanced) ----------
+function gmailHtml(g){
+  const st=gmailPill(g)+(g.email?` <span class="muted" style="font-weight:400">${esc(g.email)}</span>`:'');
+  const why=`<p class="muted"><small>Optional. With Gmail connected, Lock &amp; Land reads LinkedIn job alerts and recruiter emails, and sends the applications you approve. Without it you still get jobs and letters.</small></p>`;
+  const appMode=g.backend==='imap'||(g.backend==='gmail_api'&&g.state==='no_client'&&!SHOW_OAUTH);
+  if(appMode){
+    if(g.backend==='imap'&&g.state==='ok') return `<h2>Gmail ${st}</h2>${why}<p class="ok"><small>&#10003; Connected with an app password. It doesn't expire; you can cancel it any time at ${ext('https://myaccount.google.com/apppasswords','myaccount.google.com/apppasswords')}.</small></p>
+      <div class="row"><button class="btn" id="gcheck" onclick="checkNow(this)">Test again</button><button class="btn" onclick="forgetApp()">Disconnect</button></div>`;
+    const me=g.email||($('#gm_email')&&$('#gm_email').value)||'';
+    return `<h2>Gmail ${g.backend==='imap'?st:pill('mute','Not connected')}</h2>${why}
+      ${g.backend==='imap'&&g.state!=='missing'&&g.detail?`<p class="bad"><small>&#9888; ${esc(g.detail)}</small></p>`:''}
+      <p><b>Connect with an app password</b> (about 3 minutes). An app password is a special 16-letter password that lets one app read your email. Google makes it for you.</p>
+      ${stepsHtml([
+        `Turn on <b>2-Step Verification</b> for your Google account: ${ext('https://myaccount.google.com/signinoptions/twosv','open 2-Step Verification')}. Google asks for your phone. If it's already on, skip this.`,
+        `Open ${ext('https://myaccount.google.com/apppasswords','Google App passwords')}. Type a name like <i>Lock and Land</i> and press <b>Create</b>.`,
+        `Google shows 16 letters in a yellow box. Copy them (spaces are fine) and paste them below with your Gmail address. Then press <b>Save and test</b>.`])}
+      <div class="row"><input type="text" id="gm_email" placeholder="you@gmail.com" value="${esc(me)}" autocomplete="email"><input type="password" id="gm_pw" placeholder="16-letter app password" autocomplete="off"><button class="btn go" id="gm_save" onclick="saveApp(this)">Save and test</button></div>
+      <p id="gm_msg"></p>
+      <details><summary class="muted"><small>Don't see "App passwords"?</small></summary><p><small>Google hides it until 2-Step Verification is on, so do step 1 first. Work or school accounts often don't allow app passwords: use a personal Gmail. If you sign in only with a passkey or use Advanced Protection, Google doesn't offer app passwords either: use Google sign-in below, or skip email for now.</small></p></details>
+      <details><summary class="muted"><small>Advanced: use Google sign-in instead</small></summary><p><small>Google sign-in needs a Google Cloud "Desktop app" client file. If someone shared theirs with you, they must also add your Gmail as a <b>test user</b> in their Google Cloud project, and Google then asks you to sign in again every 7 days. The app password is easier.</small></p><div class="row"><button class="btn" onclick="useOauth()">Use Google sign-in</button></div></details>`;
+  }
+  let h=`<h2>Gmail ${st}</h2>${why}`;
+  if(g.signin&&g.signin.state==='running') h+=`<p class="warn">Finish signing in on the Google page in your browser. Lock &amp; Land waits up to 10 minutes.</p>`;
+  if(g.signin&&g.signin.state==='failed') h+=`<p class="bad"><small>&#9888; ${esc(g.signin.detail)}</small></p>`;
+  if(g.state==='error') h+=`<p class="warn"><small>Couldn't check Gmail just now (${esc(g.detail)}). It tries again later.</small></p>`;
+  if(g.state==='expired') h+=`<p class="bad"><small>Google ended the sign-in. Press <b>Sign in again</b>.</small></p>`;
+  if(g.state==='no_client') h+=`<p>Load your Google Cloud <b>Desktop app</b> OAuth client file (Google calls it <code>client_secret_….json</code>).</p>
+      <div class="row"><input type="file" id="cfile" accept=".json,application/json" class="btn"><button class="btn go" onclick="loadClient()">Load client</button></div>`;
+  else{h+=stepsHtml(['Press <b>Sign in with Google</b>. Your web browser opens a Google page.','Pick your Gmail account. If Google says the app <i>isn\'t verified</i>, press <b>Continue</b> (it\'s a private app, which is normal).','Tick both boxes (read and send email) and press <b>Continue</b>. Then come back here.']);
+    h+=`<div class="row"><button class="btn go" onclick="signin()" ${g.signin&&g.signin.state==='running'?'disabled':''}>${gmailOk(g)?'Sign in again':'Sign in with Google'}</button>
+      ${gmailOk(g)?`<button class="btn" onclick="signout()">Sign out</button>`:''}<button class="btn" id="gcheck" onclick="checkNow(this)">Check now</button></div>`;}
+  if(g.testing_mode) h+=`<p class="muted"><small>This Google app is in <b>Testing</b>, so Google asks you to sign in again every 7 days${g.expires_at?` (next: ${new Date(g.expires_at).toLocaleString()})`:''}. The tray icon turns amber when it's time.</small></p>`;
+  h+=`<div class="row"><button class="btn" onclick="useApp()">Use an app password instead (easier, no weekly sign-in)</button></div>`;
+  return h;
+}
+async function saveApp(b){const m=$('#gm_msg');b.disabled=true;m.className='muted';m.innerHTML='<small>Checking with Gmail…</small>';
+  try{const r=await api('/api/connections/gmail/app-password',{email:$('#gm_email').value,password:$('#gm_pw').value});m.className='ok';m.innerHTML=`<small>&#10003; Connected to ${esc(r.email)}.</small>`;toast('Gmail connected');await load(false)}
+  catch(e){m.className='bad';m.innerHTML=`<small>&#9888; ${esc(e.message)}</small>`;b.disabled=false}}
+const useOauth=()=>{SHOW_OAUTH=true;return act(()=>api('/api/connections/gmail/mode',{mode:'gmail_api'}),'Switched to Google sign-in')};
+const useApp=()=>act(()=>api('/api/connections/gmail/mode',{mode:'imap'}),'Switched to app password');
+const forgetApp=()=>confirm('Disconnect Gmail? Lock & Land forgets the app password. (To cancel it at Google too, delete it at myaccount.google.com/apppasswords.)')&&act(()=>api('/api/connections/gmail/app-password/forget',{}),'Gmail disconnected');
+async function saveKey(key,secret){const v=$('#key_'+key).value.trim();if(!v)return toast('Paste the key first');
+  try{const r=await api('/api/connections/secret',{name:secret,value:v});if(r.test)TESTS[key]=r.test;toast(r.test?(r.test.ok?'Saved. '+r.test.detail:'Saved, but: '+r.test.detail):'Saved',7000);await load(false)}catch(e){toast(e.message,6000)}}
+async function testKey(key){try{TESTS[key]=await api('/api/connections/source/test',{key});toast(TESTS[key].detail,6000);render()}catch(e){toast(e.message,6000)}}
+
+// ---------- Local AI: hardware, Ollama and the suggested models ----------
+let AI=null, aiPoll=null, aiWasDown=false;
+async function loadAI(refresh){
+  try{AI=await api('/api/connections/ai'+(refresh?'?refresh=1':''))}catch(e){AI={error:e.message}}
+  const c=$('#aicard'); if(c) c.innerHTML=aiHtml();
+  clearTimeout(aiPoll); if(AI&&!AI.error&&[AI.pull,AI.start].some(j=>j&&j.state==='running')) aiPoll=setTimeout(()=>loadAI(false),2500);
+  else if(AI&&!AI.error&&AI.plan.ollama_state!=='ok') aiPoll=setTimeout(()=>loadAI(false),10000);
+  if(AI&&!AI.error){const up=AI.plan.ollama_state==='ok';if(up&&aiWasDown)load(false);aiWasDown=!up}
+}
+const WHERE={gpu:pill('ok','On the GPU'),split:pill('warn','Partly on CPU'),cpu:pill('warn','On the CPU'),too_big:pill('bad','Too big')};
+const LEVEL={great:pill('ok','Strong machine'),good:pill('ok','Good fit'),ok:pill('ok','Fits, 7B'),slow:pill('warn','Works, slow'),weak:pill('warn','Weak: 3B only'),too_weak:pill('bad','Too weak')};
+function aiHtml(){
+  const o=S&&S.ollama;
+  const intro=`<p class="muted"><small>Lock &amp; Land writes letters and reads job ads with a free AI called <b>Ollama</b> that runs on this computer. Nothing you write is sent to an AI company.</small></p>`;
+  if(!AI) return `<h2>Local AI ${o?(o.state==='ok'?pill('ok','Ready'):o.state==='down'?pill('bad','Not running'):pill('warn','Models missing')):''}</h2>${intro}<p class="muted"><small>Checking this computer…</small></p>`;
+  if(AI.error) return `<h2>Local AI</h2>${intro}<p class="bad"><small>${esc(AI.error)}</small></p><div class="row"><button class="btn" onclick="loadAI(true)">Check again</button></div>`;
+  const hw=AI.hardware, ol=AI.ollama, p=AI.plan, mac=/mac/i.test(hw.os||'')||IS_MAC;
+  const os={state:p.ollama_state}, busy=AI.pull.state==='running', ready=os.state==='ok'&&o&&o.state==='ok'&&p.applied;
+  let h=`<h2>Local AI ${ready?pill('ok','Ready'):os.state==='ok'?pill('warn','Models to download'):os.state==='not_running'?pill('bad','Not running'):pill('bad','Not installed')} ${LEVEL[p.level]||''}</h2>${intro}`;
+  if(p.level==='too_weak') h+=`<p class="bad"><small>&#9888; This computer has too little memory for the local AI (${hw.ram_gb} GB). Lock &amp; Land can still find and score jobs, but it can't write letters here. A computer with 16 GB of memory works well.</small></p>`;
+  else if(p.level==='slow'||p.level==='weak') h+=`<p class="warn"><small>This computer will work, but letters take a few minutes each. That's fine: they're written in the background.</small></p>`;
+  if(os.state==='not_installed'){
+    h+=`<p><b>Step 1: install Ollama</b> (free, about 1 GB)</p>`+stepsHtml(mac?[
+      `Press <b>Download Ollama</b> below. Your browser downloads it from ollama.com.`,
+      `Open the download (in Downloads). Drag <b>Ollama</b> into <b>Applications</b> if it asks.`,
+      `Open Ollama from Applications. If the Mac says it's from the internet, press <b>Open</b>. A small llama appears in the menu bar at the top.`,
+      `Come back here. This card updates by itself once Ollama is running.`]:[
+      `Press <b>Download Ollama</b> below. Your browser downloads <i>OllamaSetup.exe</i> from ollama.com.`,
+      `Open it (in Downloads) and press <b>Install</b>. It takes a minute or two.`,
+      `When it finishes, a small llama icon appears near the clock (it may be under the <b>^</b> arrow). Nothing else opens, that's normal.`,
+      `Come back here. This card updates by itself once Ollama is running.`]);
+    h+=`<div class="row"><a class="btn go" href="https://ollama.com/download${mac?'/mac':'/windows'}" target="_blank" rel="noopener">Download Ollama</a><button class="btn" onclick="loadAI(true)">Check again</button></div>`;
+  }
+  if(os.state==='not_running') h+=`<p>Ollama is installed but not running.</p><div class="row"><button class="btn go" onclick="startOllama()" ${AI.start.state==='running'?'disabled':''}>${AI.start.state==='running'?'Starting…':'Start Ollama'}</button><button class="btn" onclick="loadAI(true)">Check again</button></div>${AI.start.state==='failed'?`<p class="bad"><small>Couldn't start it: ${esc(AI.start.detail)}. Open Ollama yourself (${mac?'from Applications':'from the Start menu'}), then press Check again.</small></p>`:''}`;
+  if(os.state==='ok'&&!ready&&p.level!=='too_weak'){
+    h+=`<p><b>${os.state==='ok'?'Step 2: ':''}download the AI models</b>${p.download_gb?` (about ${p.download_gb} GB, once)`:''}</p>
+      <p class="muted"><small>Lock &amp; Land picked the right models for this computer. The download takes 10 to 40 minutes depending on your internet; you can keep using the app, and you can close this window.</small></p>
+      <div class="row"><button class="btn go" onclick="applyAI(false)" ${busy?'disabled':''}>${busy?'Downloading…':p.applied?'Download the missing models':'Download the models'}</button></div>`;
+  }
+  if(ready) h+=`<p class="ok"><small>&#10003; Ollama is running and the models are downloaded. Nothing else to do.</small></p>`;
+  if(busy) h+=`<p class="warn"><small>${esc(plainPull(AI.pull.detail))}</small></p><div class="bar2"><span style="width:${pullPct(AI.pull.detail)}%"></span></div>`;
+  if(AI.pull.state==='failed') h+=`<p class="bad"><small>&#9888; The download stopped: ${esc(AI.pull.detail)}. Check the internet connection and the free disk space, then press the button again; it carries on where it stopped.</small></p>`;
+  (o&&o.fallbacks||[]).forEach(f=>h+=`<p class="warn"><small>&#9888; <code>${esc(f.wanted)}</code> ran out of memory, so ${esc(({writer:'letter writing',extractor:'job facts and scoring',checker:'the fact check'})[f.task]||f.task)} is using <code>${esc(f.using)}</code> until the app restarts. Close other big apps or choose a smaller model below.</small></p>`);
+  // ---------- the technical detail, folded away ----------
+  const gp=hw.gpus.length?hw.gpus.map(g=>`${esc(g.name)}${g.vram_gb?` (${g.vram_gb} GB${hw.unified_memory?' usable by the GPU':''})`:''}${g.ollama_can_use?'':` <span class="muted">· not used: ${esc(g.why)}</span>`}`).join('; '):'none found';
+  h+=`<details style="margin-top:10px"><summary class="muted"><small>Details: this computer and the chosen models</small></summary>
+    <p class="muted"><small><b>This computer:</b> ${esc(hw.os)} ${esc(hw.arch)} · ${esc(hw.cpu)} (${hw.cores} threads) · ${hw.ram_gb} GB RAM${hw.unified_memory?' (unified)':''} · GPU: ${gp}<br>
+    <b>Ollama:</b> ${esc(ol.host)}${ol.version?' · v'+esc(ol.version):''} · ${ol.models.length} model(s) installed${AI.tuned_for?` · tuned ${esc(AI.tuned_for)}`:''}</small></p>`;
+  p.warnings.forEach(w=>h+=`<p class="warn"><small>&#9888; ${esc(w)}</small></p>`);
+  h+=`<table><tr><td><small class="muted">Task</small></td><td><small class="muted">Model · quantisation · context · memory</small></td></tr>`+
+    p.tasks.map(t=>{const cur=AI.current[t.task], same=cur===t.model;
+      return `<tr><td><b>${esc(t.label)}</b></td><td><code>${esc(t.model)}</code> ${t.size} · ${t.quant}${t.num_ctx?` · ${t.num_ctx/1024}k ctx`:''} · ${t.need_gb} GB ${WHERE[t.where]||''} ${t.installed?pill('ok','Downloaded'):pill('mute',t.download_gb+' GB download')}
+        ${same?'':`<br><small class="muted">now: <code>${esc(cur)}</code>${t.num_ctx&&AI.current_ctx[t.task]!==t.num_ctx?` · ${AI.current_ctx[t.task]/1024}k ctx`:''}</small>`}</td></tr>`}).join('')+`</table>`;
+  h+=`<div class="row">${ready?'':`<button class="btn" onclick="applyAI(false)" ${busy||os.state!=='ok'?'disabled':''}>Use these settings</button>`}<button class="btn" onclick="loadAI(true)">Check again</button></div>`;
+  if(p.alternative) h+=`<p><small><b>Option:</b> <code>${esc(p.alternative.model)}</code> for letters (${p.alternative.need_gb} GB). ${esc(p.alternative.why)}</small></p><div class="row"><button class="btn" onclick="applyAI(true)" ${busy||os.state!=='ok'?'disabled':''}>Use the bigger letter model</button></div>`;
+  if(p.fallback) h+=`<p><small><b>Fallback:</b> ${esc(p.fallback)}</small></p>`;
+  if(p.server_env){const env=Object.entries(p.server_env);
+    const cmd=env.map(([k,v])=>mac?`launchctl setenv ${k} ${v}`:`setx ${k} ${v}`).join(mac?'; ':' & ');
+    h+=`<p style="margin-top:10px"><small><b>Optional speed-up for Ollama</b> (once, then quit and reopen Ollama): ${env.map(([k,v])=>`<code>${esc(k)}=${esc(v)}</code>`).join(' ')}. They halve the memory the context uses and stop models pushing each other out.</small></p>
+      <div class="row"><button class="btn" onclick="copyText(${esc(JSON.stringify(cmd))});toast('Copied. Paste it in ${mac?'Terminal':'Command Prompt'}, then restart Ollama.')">Copy the command</button></div>`}
+  h+=`<p><small><b>Why these models</b></small></p>${p.reasons.map(r=>`<p><small>${esc(r)}</small></p>`).join('')}
+    ${p.tips.length?`<p><small><b>Tuning tips</b></small></p>`+p.tips.map(t=>`<p><small>${esc(t).replace(/`([^`]+)`/g,'<code>$1</code>')}</small></p>`).join(''):''}
+    ${ol.loaded.length?`<p><small><b>Loaded now:</b> ${ol.loaded.map(m=>`${esc(m.name)} ${m.size_gb} GB, ${Math.round(m.gpu_share*100)}% on GPU`).join(' · ')}</small></p>`:''}
+    <p class="muted"><small>Suggestions only change <code>llm.models</code> and <code>llm.num_ctx</code> in config.yaml (a dated backup is kept). Downloads come straight from Ollama's library.</small></p></details>`;
+  return h;
+}
+const pullPct=t=>{const m=/(\d+)%/.exec(t||'');return m?+m[1]:3};
+function plainPull(t){const m=/pulling (\S+) \((\d+)\/(\d+)\)(?::\s*(\d+)%)?/.exec(t||'');return m?`Downloading model ${m[2]} of ${m[3]}${m[4]?`: ${m[4]}%`:'…'} You can keep using Lock & Land.`:(t||'Downloading…')}
+const startOllama=()=>api('/api/connections/ollama/start',{}).then(()=>{toast('Starting Ollama…');loadAI(false)}).catch(e=>toast(e.message,6000));
+async function applyAI(alt){
+  try{const r=await api('/api/connections/ai/apply',{alternative:alt});toast(r.pull?'Saved. Downloading the models in the background…':'Saved to config.yaml');await load(false);await loadAI(false)}
+  catch(e){toast(e.message,6000)}
+}
+function keychainName(){const k=S.keychain;return k.includes('Windows')?'Windows Credential Manager':k.includes('macOS')||k.includes('OS_X')?'macOS Keychain':k.startsWith('unavailable')?'keychain (unavailable!)':'OS keychain'}
+async function checkNow(b){b.disabled=true;b.textContent='Checking…';toast('Checking Gmail…',20000);
+  await load(true);const g=S&&S.gmail||{};
+  const ok=g.state==='ok'||g.state==='expiring';
+  toast(ok?`Gmail works${g.email?' ('+g.email+')':''}: checked just now`:`Gmail needs you: ${g.detail||g.state||'unknown'}`,8000)}
+// Telegram: four steps a non-technical tester can follow; the token stays in the keychain and never comes back.
+let TGMSG=null;
+function tgHtml(t){
+  const st=t.enabled&&t.has_token&&t.chat_set?pill('ok','On'):t.has_token&&t.chat_set?pill('mute','Off'):t.has_token?pill('warn','Needs step 3'):pill('mute','Not set up');
+  const bot=t.bot?ext('https://t.me/'+encodeURIComponent(t.bot),'@'+esc(t.bot)):'your bot';
+  const steps=[
+    `In Telegram, open ${ext('https://t.me/BotFather','@BotFather')}, send <b>/newbot</b> and follow its two questions (a name, then a username ending in <i>bot</i>). It replies with a <b>token</b>: a long code like <code>123456789:AAH…</code>.${t.has_token?' '+pill('ok','Done'):''}`,
+    `Copy the token, paste it below and press <b>Save</b>. Lock &amp; Land checks it straight away.<div class="row"><input type="password" id="tg" placeholder="${t.has_token?'Token saved. Paste a new one to replace it':'Paste the bot token here'}"><button class="btn${t.has_token?'':' go'}" onclick="saveTg()">Save</button></div>`,
+    `Open ${bot} in Telegram and press <b>Start</b> (or send it any message). Then press <b>Find my chat</b>.${t.chat_set?' '+pill('ok',t.who?'Connected: '+t.who:'Connected'):''}<div class="row"><button class="btn${t.has_token&&!t.chat_set?' go':''}" onclick="tgConnect()" ${t.has_token?'':'disabled'}>Find my chat</button></div>`,
+    `Press <b>Send test message</b>. A message should arrive in Telegram within a few seconds.<div class="row"><button class="btn${t.has_token&&t.chat_set?' go':''}" onclick="tgTest()" ${t.has_token&&t.chat_set?'':'disabled'}>Send test message</button>${t.has_token&&t.chat_set?`<button class="btn" onclick="tgEnable(${!t.enabled})">${t.enabled?'Turn alerts off':'Turn alerts on'}</button>`:''}</div>`,
+  ];
+  const last=TGMSG||(t.last&&t.last.at?{ok:t.last.ok,detail:(t.last.ok?'Last message sent ':'Last message failed ')+t.last.at.replace('T',' ')+(t.last.ok?'':': '+t.last.detail)}:null);
+  return `<h2>Telegram ${st}</h2>
+    <p class="muted"><small>Optional and free. Lock &amp; Land sends a short message to your phone when letters are ready to review, when an application is waiting for you, and when a sign-in expires or the database needs attention. Never your letters or personal details.</small></p>
+    ${stepsHtml(steps)}
+    ${last?`<p class="${last.ok?'ok':'bad'}"><small>${last.ok?'&#10003; ':'&#9888; '}${esc(last.detail)}</small></p>`:''}
+    <details><summary class="muted"><small>Type the chat id by hand instead</small></summary><div class="row"><input type="text" id="tgchat" placeholder="123456789"><button class="btn" onclick="tgChat()">Save</button></div><p class="muted"><small>Only if Find my chat can't work (for example the bot already has a webhook). @userinfobot in Telegram tells you your id.</small></p></details>`;
+}
+async function tgRun(path,body){TGMSG=null;const r=await act(()=>api(path,body||{}));if(r&&r.detail!==undefined){TGMSG={ok:r.ok!==false,detail:r.detail};const c=$('#telegram');if(c)c.innerHTML=tgHtml(S.telegram)}return r}
+async function saveTg(){if(!$('#tg').value.trim())return toast('Paste the token from @BotFather first');TGMSG=null;
+  const r=await act(()=>api('/api/connections/secret',{name:'TELEGRAM_BOT_TOKEN',value:$('#tg').value}));
+  if(r&&r.test){TGMSG={ok:r.test.ok,detail:r.test.ok?r.test.detail+'. Now do step 3.':r.test.detail};const c=$('#telegram');if(c)c.innerHTML=tgHtml(S.telegram)}}
+const tgConnect=()=>tgRun('/api/connections/telegram/connect');
+const tgTest=()=>tgRun('/api/connections/telegram/test');
+const tgEnable=on=>act(()=>api('/api/connections/telegram/enabled',{enabled:on}),on?'Telegram alerts on':'Telegram alerts off');
+const tgChat=()=>act(()=>api('/api/connections/telegram/chat',{chat_id:$('#tgchat').value}),'Chat id saved. Now press Send test message.');
+async function act(fn,msg){try{const r=await fn();if(msg)toast(typeof msg==='function'?msg(r):msg);await load(true);return r}catch(e){toast(e.message,6000)}}
+const toggleSource=(k,on)=>act(()=>api('/api/connections/source',{key:k,enabled:on}),on?'Turned on: the next fetch uses it':'Turned off');
+const setSecret=(n,sel)=>act(()=>api('/api/connections/secret',{name:n,value:$(sel).value}),'Saved to the keychain');
+const adzuna=()=>act(()=>api('/api/connections/adzuna',{app_id:$('#az_id').value,app_key:$('#az_key').value}),r=>r.ok?'Adzuna works: '+r.detail:r.detail);
+const adzunaTest=()=>act(()=>api('/api/connections/adzuna/test',{}),r=>r.ok?'Adzuna works: '+r.detail:r.detail);
+const signin=()=>act(()=>api('/api/connections/gmail/signin',{}),'Google sign-in opened in your web browser: finish there, then come back');
+const signout=()=>confirm('Sign out of Gmail? Recruiter mail and email applications stop until you sign in again.')&&act(()=>api('/api/connections/gmail/signout',{}),'Signed out');
+const pull=()=>act(()=>api('/api/connections/ollama/pull',{}),'Downloading models (several GB)…');
+const encryptAll=()=>act(()=>api('/api/connections/encrypt',{}),r=>`Encrypted ${r.encrypted.length} file(s)`);
+async function loadClient(){const f=$('#cfile').files[0];if(!f)return toast('Choose the client_secret_….json file first');const t=await f.text();act(()=>api('/api/connections/gmail/client',{json:t}),'OAuth client saved to the keychain')}
+async function showKey(){if(!confirm('Show the recovery key on screen? Make sure nobody is looking at your screen.'))return;try{const r=await api('/api/connections/recovery-key',{confirm:'show'});
+  $('#keyout').innerHTML=`<p class="key">${esc(r.key)}</p><div class="row"><button class="btn go" onclick="copyText(${esc(JSON.stringify(r.key))}).then(()=>toast('Copied. Paste it into your password manager now.'))">Copy</button>${S.recovery_saved?'':`<button class="btn" onclick="act(()=>api('/api/connections/recovery-key/saved',{}),'Great, marked as saved')">I've saved it</button>`}</div>`}catch(e){toast(e.message)}}
+async function restoreBackup(){const n=$('#bkname').value;if(!confirm('Restore the database from '+n+'?\n\nJobs and letters since then are replaced. The current file is kept as jobhunter.db.replaced-… in the data folder. Lock & Land restarts.'))return;
+  act(()=>api('/api/connections/backup/restore',{name:n,confirm:'restore'}),'Restoring: Lock & Land restarts in a moment')}
+const restoreKey=()=>act(()=>api('/api/connections/recovery-key/restore',{key:$('#rkey').value}),'Key restored. Quit Lock & Land from the tray icon and open it again.');
+async function doImport(){const p=$('#legacy').value;if(!confirm('Import '+p+' into '+S.home+'?'))return;act(()=>api('/api/connections/import',{path:p}),r=>`Imported: ${r.copied.length} items, ${r.secrets.imported.length} secrets, ${r.encrypted.length} databases encrypted`)}
+async function moveHome(mode){const p=$('#newhome').value.trim();if(!p)return toast('Type the new folder path first');
+  if(!confirm((mode==='move'?'Copy all your data to ':'Switch to the existing data in ')+p+' and restart jobhunter?'))return;
+  try{await api('/api/connections/home',{path:p,mode});toast('Restarting jobhunter… this page reloads in a few seconds',8000);setTimeout(()=>(window.jhReload||(()=>location.reload()))(),9000)}catch(e){toast(e.message,7000)}}
+const retire=p=>confirm('Wipe the plain-text secret files in '+p+'? That copy stops being able to sign in. This cannot be undone.')&&act(()=>api('/api/connections/retire',{path:p}),r=>`Wiped ${r.wiped.length} file(s)`);
+load(false).then(()=>loadAI(false));
+</script>
+</body>
+</html>

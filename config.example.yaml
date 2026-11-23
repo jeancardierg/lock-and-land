@@ -1,0 +1,227 @@
+# jobhunter config — copy to config.yaml and edit.
+# Most people never edit this file: the app's Job criteria page writes these settings for you.
+# The values below are a worked example for an IT systems administrator in Barcelona. Replace them with your own.
+
+profile:
+  name: "Your Name"
+  first_name: ""
+  email: "you@gmail.com"            # Gmail account the bot reads/sends from
+  other_emails: []                  # your other mailboxes (e.g. the one LinkedIn uses); never replied to
+  phone: ""
+  linkedin_url: ""
+  location: "Barcelona, Spain"
+  work_mode: "Barcelona hybrid or fully remote within the EU; not relocating"
+  headline: ""
+  current_title: ""
+  # CV text the LLMs read, plus the file attached to email applications, per variant.
+  # main = Systems Admin / Endpoint & Identity (primary target), lead = IT Lead / IT Manager, es = Spanish ads.
+  cv_variants:
+    # attachment: the PDF sent with email applications (path relative to the data folder, or absolute).
+    main: {markdown: "cv/cv_main.md", attachment: "../CV/Your_Name_CV_EN.pdf"}
+    lead: {markdown: "cv/cv_lead.md", attachment: "../CV/Your_Name_CV_IT-Lead_EN.pdf"}
+    es:   {markdown: "cv/cv_es.md",   attachment: "../CV/Your_Name_CV_ES.pdf"}
+  languages: ["English (native)", "Spanish (native)"]
+  work_authorization: "EU work authorization"   # confirm wording
+  notice_period: ""                 # e.g. "1 month"; left blank = not stated
+  min_salary_eur: 35000             # used for scoring only; never stated in replies
+  salary_expectation: ""            # leave blank: replies ask for the range instead of naming a number
+
+targets:
+  primary: "IT Systems Administrator / Endpoint & Identity Engineer"
+  secondary: "IT Lead / IT Manager at 100–300-person companies"
+  markets: "Barcelona (hybrid) or fully remote EU. Onsite outside Barcelona is a poor fit."
+  # Scoring keywords: each distinct hit in the ad adds 2 points to the Ollama score (max +10)
+  keywords: ["Intune", "Autopilot", "Entra ID", "Azure AD", "LAPS", "Kandji", "Iru", "Jamf", "Apple Business Manager",
+             "ABM", "Okta", "SSO", "MFA", "SCIM", "Google Workspace", "EDR", "Bitdefender", "Defender for Endpoint",
+             "ISO 27001", "least privilege", "PowerShell", "JSM", "Jira Service Management", "MDM", "endpoint",
+             "identity", "IAM", "joiner", "onboarding", "SaaS"]
+
+rules:
+  # On-site/hybrid jobs count as local only in Barcelona and towns within ~1 h commute (list below, accents optional).
+  # Everything else that isn't remote (Madrid, Valencia, abroad...) goes to the 'Relocation needed' tab.
+  # Remote jobs open to Spain or the EU stay in the main queue.
+  # Jobs requiring a language other than English or Spanish are excluded.
+  home_cities: ["barcelona", "hospitalet", "badalona", "cornella", "sant cugat", "sabadell", "terrassa",
+                "mataro", "granollers", "castelldefels", "el prat"]
+
+search:
+  # Keyword queries sent to every source
+  queries:
+    - "system administrator"
+    - "systems administrator"
+    - "endpoint engineer"
+    - "Intune"
+    - "identity engineer"
+    - "IAM engineer"
+    - "Okta"
+    - "modern workplace"
+    - "IT operations engineer"
+    - "IT lead"
+    - "IT manager"
+  # Prefilter: a job must contain at least one of these (title+description)
+  must_have_any: ["IT", "system", "endpoint", "intune", "identity", "IAM", "okta", "entra", "MDM", "workplace",
+                  "infrastructure", "administrator", "ISO 27001", "sistemas"]
+  exclude_title: ["software engineer", "frontend", "backend", "full stack", "fullstack", "developer", "data scientist",
+                  "data engineer", "sales", "account executive", "intern", "praktikant", "werkstudent", "trainee",
+                  "1st line", "first line", "level 1", "L1 ",
+                  "architect", "client delivery", "account manager", "consultant"]
+  max_age_days: 14
+
+sources:
+  jobtech:        # Arbetsförmedlingen, Sweden (no key). Off: Sweden is outside the agreed markets.
+    enabled: false
+    limit_per_query: 50
+  adzuna:         # optional and paid after a 25-call trial; keys go in the Connections page (keychain)
+    enabled: false
+    countries: ["es"]          # all of Spain; non-local on-site jobs land in "Relocation needed"
+    where: {}
+    results_per_page: 50
+    min_hours_between: 24   # one Adzuna fetch a day
+    max_calls_per_day: 12   # hard budget; Adzuna's paid "API Access" plan allows 500/day, 5,000/month
+    max_calls_per_month: 300
+    # Small plan or 25-call trial: one combined search instead of one call per query (any word may match;
+    # the scorer filters the rest). Uncomment to use 1-2 calls a day instead of ~11:
+    # what_or: "sysadmin administrador sistemas intune okta entra endpoint iam identity workplace"
+    # pages: 2
+  remotive:       # remote jobs (no key). No categories = search by your roles (any kind of job)
+    enabled: true
+    categories: []   # or category slugs, e.g. ["devops", "information-technology"]
+    allowed_locations: ["worldwide", "europe", "emea", "eu", "spain", "anywhere"]
+  arbeitnow:      # Germany + remote EU (no key)
+    enabled: true
+    pages: 3
+    remote_only: true
+  himalayas:      # remote jobs, no key; once a day
+    enabled: true
+    country: "Spain"         # jobs open to Spain (worldwide ones included)
+  jobicy:         # remote jobs, no key; once a day
+    enabled: true
+  weworkremotely: # all remote jobs RSS (every category), no key
+    enabled: true
+  workingnomads:  # remote jobs feed, no key
+    enabled: true
+  jooble:         # Spain + Barcelona; free key from es.jooble.org/api/about (Connections page), 100 calls/day
+    enabled: false
+    locations: ["Barcelona", "España"]
+    max_calls_per_day: 60
+  remoteok:       # remoteok.com public feed, no key
+    enabled: true
+  hnhiring:       # Hacker News "Who is hiring?" monthly thread (Algolia API), no key
+    enabled: true
+  themuse:        # every kind of job, mostly US/Europe; no key needed (optional MUSE_API_KEY raises the limit)
+    enabled: true
+    pages: 5
+  careerjet:      # every sector in Spain; free publisher key (Connections page, CAREERJET_API_KEY)
+    enabled: false
+    locale_code: es_ES
+  findwork:       # tech jobs; free key from findwork.dev (Connections page, FINDWORK_API_KEY)
+    enabled: false
+  watchlist:      # public boards of companies you pick; find slugs with: jobhunter watchlist-find "Name"
+    enabled: false
+    companies: []
+    # - {name: "Example Co", ats: "greenhouse", board: "exampleco"}
+  linkedin_alerts:  # parses LinkedIn job-alert emails in Gmail (no LinkedIn access at all)
+    enabled: true
+    lookback_days: 7
+
+llm:
+  ollama:
+    host: "http://localhost:11434"
+    model: "qwen2.5:14b"            # fallback for anything not listed under models
+    timeout_s: 180
+    keep_alive: "10m"
+  # Everything runs locally in Ollama. No paid API is used anywhere.
+  models:
+    writer: "qwen2.5:14b"           # cover letters and written answers (~9 GB VRAM at Q4)
+    extractor: "qwen2.5:7b-instruct"  # job-ad facts, scoring, form-field matching
+    checker: "qwen2.5:7b-instruct"    # second-opinion fact check and Q&A matching
+    embed: "bge-m3"                 # retrieval (EN + ES)
+    vision: ""                      # optional: "qwen2.5vl:7b" to suggest labels for odd form fields
+  drafting:
+    num_ctx: 8192
+    temperature: 0.4
+
+# Fact grounding (Phase 1). Letters may only use facts from facts/master_profile.json, cited by ID.
+grounding:
+  min_sim: 0.5          # how close a CV fact must be to a requirement to be offered to the writer
+  max_facts: 8
+  max_attempts: 3       # regenerate with the validator's feedback up to this many times
+  entailment: true      # 7B second opinion on each claim (soft: lowers the score, never blocks alone)
+  words: [150, 240]
+
+preferences:
+  # Remote is the ideal, hybrid in Barcelona is fine, fully on-site only if the pay is high enough.
+  remote_bonus: 5               # points added to remote jobs
+  onsite_min_salary_eur: 40000  # fully on-site below this (stated pay) is filtered out; pay not stated = no auto letter
+  onsite_penalty: 5             # points taken off on-site jobs that do pay enough
+
+thresholds:
+  shortlist_score: 60   # final score >= this shows in the queue
+  draft_score: 70       # a grounded letter is written automatically at >= this
+  min_coverage: 0.34    # share of the ad's must-haves that match a CV fact before the LLM scores it
+
+# Hard rules for recruiter replies (cover letters use the master profile and the validator instead)
+drafting:
+  fact_check: true   # second local pass flags claims the CV doesn't support (shown in the dashboard)
+  rules:
+    - "Use only facts in the CV text provided. Never invent employers, dates, numbers, tools, certifications or results."
+    - "The candidate holds no certifications. Do not claim any."
+    - "Never present a job title other than the candidate's official one."
+    # Add your own wording rules here, for example:
+    # - "Jamf: say 'Jamf-comparable macOS management', never hands-on Jamf."
+    - "Never name colleagues, managers, partners or customers. Company names of the candidate's own employers are fine."
+    - "Never mention health or medical details. If a career gap must be addressed, use only the fixed career-break line from the facts profile."
+    - "Never state a salary number. If pay comes up, ask for the range. Never commit to start dates or availability beyond 'this week or next' for a call."
+    - "If referring to the candidate in the third person, use they/them."
+
+mail:
+  # gmail_api = OAuth (sign-in expires every 7 days while the Google app is in Testing)
+  # imap      = Gmail app password in .env as GMAIL_APP_PASSWORD (no weekly expiry; needs 2-step verification)
+  backend: "gmail_api"
+
+gmail:
+  testing_mode: true   # OAuth app in Google 'Testing': sign-in lasts 7 days. Set false once published.
+
+recruiters:
+  enabled: true
+  lookback_days: 14
+  # Gmail search used to find recruiter mail (LinkedIn InMail notifications included)
+  gmail_query: >-
+    newer_than:14d -category:promotions -from:me
+    (from:linkedin.com OR "linkedin.com/messaging" OR subject:(opportunity OR role OR position OR vacancy OR "job offer" OR oportunidad OR "your profile" OR recruiter OR recruiting OR "sysadmin" OR "IT manager"))
+  tone: "friendly, concise, professional"
+  reply_guidelines: |
+    - Thank them and show interest if the role fits: IT Systems Administrator / Endpoint & Identity Engineer first,
+      IT Lead / IT Manager at 100–300-person companies second; Barcelona hybrid or fully remote EU.
+    - Ask for the salary range, location/remote policy and team size if not stated.
+    - Politely decline roles that are clearly off-profile (pure software development, sales, onsite outside Barcelona,
+      first-line-only helpdesk).
+    - Propose a short call and share availability as "this week or next".
+
+limits:
+  max_drafts_per_run: 8      # letters per synchronous `run`
+  prepare_per_tick: 25       # worker batch sizes (every 2 minutes)
+  score_per_tick: 25
+  drafts_per_tick: 4
+  submissions_per_day: 15    # daily target shown at the top of the review page (applied + emailed)
+
+enrich:
+  enabled: true              # fetch the full ad from public ATS pages (Greenhouse, Lever, Ashby...). Never LinkedIn/Indeed.
+
+review:
+  host: "127.0.0.1"          # set to this PC's Tailscale IP to review from your phone
+  port: 8502
+  public_host: ""            # host name used in notification links, if different
+
+notify:
+  review_batch: 5            # Windows toast every 5 letters ready
+  telegram:                  # optional phone alerts: short notices only, never letter text
+    enabled: false           # set up on the Configuration page: save the bot token (kept in the OS keychain),
+    chat_id: ""              # press Start in your bot, then "Find my chat" fills this and turns alerts on
+
+schedule:
+  every_hours: 3
+
+# Marks this file as the example: the setup wizard starts with empty criteria and asks for your CV.
+wizard:
+  template: true

@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+.env
+config.yaml
+data/
+.pytest_cache/
+
+# desktop build
+build/
+dist/
+.build-venv/
+
+# personal data: never commit
+cv/
+facts/
+*.db
+*.db-*
+token.json
+credentials.json
+client_secret*.json
+home.txt
+
+# fictional sample profile and CVs for the tests (Alex Example): safe to commit
+!tests/fixtures/cv/
+!tests/fixtures/facts/

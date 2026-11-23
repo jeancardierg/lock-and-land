@@ -1,0 +1,388 @@
+{
+  "version": "2026-11-23",
+  "status": "APPROVED",
+  "_note": "FICTIONAL sample profile used by the tests. Alex Example, Northwind Media and Contoso Services are made up.",
+  "identity": {
+    "name": "Alex Example",
+    "first_name": "Alex",
+    "location": "Barcelona, Spain",
+    "work_mode": "Barcelona hybrid or fully remote within the EU; not relocating",
+    "work_authorization": "EU work authorization",
+    "languages": [
+      "English (native / bilingual)",
+      "Spanish (native / bilingual)"
+    ],
+    "current_title_official": "IT Support Specialist",
+    "current_scope": "Endpoint, Identity & IT Operations",
+    "years_corporate_it": 6,
+    "certifications": [],
+    "education": "Higher Technician Diploma in IT"
+  },
+  "experience": [
+    {
+      "id": "northwind",
+      "employer": "Northwind Media",
+      "title": "IT Support Specialist",
+      "start": "2025-05",
+      "end": null,
+      "it": true
+    },
+    {
+      "id": "break",
+      "employer": "Career break",
+      "title": "Career break",
+      "start": "2023-06",
+      "end": "2025-05",
+      "it": false
+    },
+    {
+      "id": "contoso",
+      "employer": "Contoso Services",
+      "title": "IT Support Analyst",
+      "start": "2019-03",
+      "end": "2023-06",
+      "it": true
+    }
+  ],
+  "facts": [
+    {
+      "id": "F-EXP-01",
+      "employer": null,
+      "area": "summary",
+      "verb_level": "executed",
+      "text": "6+ years in corporate IT.",
+      "text_es": "Más de 6 años en IT corporativo.",
+      "tags": [
+        "experience"
+      ]
+    },
+    {
+      "id": "F-OKTA-01",
+      "employer": "northwind",
+      "area": "identity",
+      "verb_level": "executed",
+      "text": "Rolled out Okta SSO and MFA company-wide, reaching 100% adoption against an 80% target through self-service guides and hands-on support.",
+      "text_es": "Despliegue de Okta SSO y MFA en toda la empresa, con un 100% de adopción frente a un objetivo del 80%, gracias a guías de autoservicio y soporte directo.",
+      "tags": [
+        "identity",
+        "okta",
+        "sso",
+        "mfa",
+        "adoption"
+      ]
+    },
+    {
+      "id": "F-OKTA-04",
+      "employer": "northwind",
+      "area": "identity",
+      "verb_level": "owned",
+      "text": "Own the Okta tenant and its renewal.",
+      "text_es": "Responsable actual del tenant de Okta y su renovación.",
+      "tags": [
+        "identity",
+        "okta",
+        "vendors"
+      ]
+    },
+    {
+      "id": "F-INTUNE-01",
+      "employer": "northwind",
+      "area": "windows",
+      "verb_level": "led_delivery",
+      "text": "Led delivery of the Microsoft Intune and Windows Autopilot rollout for ~90 Windows devices (planned by the former IT manager), driving stakeholder follow-up, user communications and documentation.",
+      "text_es": "Lideré la ejecución del despliegue de Microsoft Intune y Windows Autopilot en ~90 equipos Windows (planificado por el anterior IT manager), impulsando el seguimiento con los stakeholders, la comunicación a usuarios y la documentación.",
+      "tags": [
+        "endpoint",
+        "intune",
+        "autopilot",
+        "windows",
+        "mdm"
+      ],
+      "never_say": [
+        "designed",
+        "architected",
+        "planned",
+        "diseñé",
+        "planifiqué"
+      ]
+    },
+    {
+      "id": "F-INTUNE-02",
+      "employer": "northwind",
+      "area": "windows",
+      "verb_level": "executed",
+      "text": "Met the goal of 80%+ of EU devices managed and compliant.",
+      "text_es": "Se cumplió el objetivo de más del 80% de equipos de la UE gestionados y en cumplimiento.",
+      "tags": [
+        "endpoint",
+        "compliance",
+        "kpi"
+      ]
+    },
+    {
+      "id": "F-MAC-01",
+      "employer": "northwind",
+      "area": "macos",
+      "verb_level": "executed",
+      "text": "Executed the Iru (Kandji) MDM rollout for a ~70-Mac fleet with Apple Business Manager zero-touch enrollment and a pilot-then-waves deployment.",
+      "text_es": "Ejecuté el despliegue de Iru (Kandji) MDM en una flota de ~70 Mac con inscripción zero-touch vía Apple Business Manager y despliegue piloto y por oleadas.",
+      "tags": [
+        "endpoint",
+        "macos",
+        "mdm",
+        "apple"
+      ]
+    },
+    {
+      "id": "F-EDR-01",
+      "employer": "northwind",
+      "area": "security",
+      "verb_level": "led_solo",
+      "text": "Led the Bitdefender GravityZone EDR rollout single-handed to ~150 endpoints and worked ~120 security cases.",
+      "text_es": "Lideré en solitario el despliegue de Bitdefender GravityZone EDR en ~150 endpoints y gestioné ~120 casos de seguridad.",
+      "tags": [
+        "security",
+        "edr",
+        "endpoint",
+        "incident"
+      ]
+    },
+    {
+      "id": "F-GOV-01",
+      "employer": "northwind",
+      "area": "governance",
+      "verb_level": "executed",
+      "text": "Wrote IT policies mapped to ISO 27001:2022 controls.",
+      "text_es": "Redacté políticas de IT alineadas con los controles de ISO 27001:2022.",
+      "tags": [
+        "governance",
+        "iso 27001",
+        "policy",
+        "compliance"
+      ]
+    },
+    {
+      "id": "F-AI-01",
+      "employer": "northwind",
+      "area": "ai",
+      "verb_level": "led_delivery",
+      "text": "Administer the company's AI assistant workspace (100+ users), with seats allocated by department and sign-in through Okta SSO.",
+      "text_es": "Administro el espacio de trabajo del asistente de IA de la empresa (más de 100 usuarios), con licencias por departamento e inicio de sesión mediante Okta SSO.",
+      "tags": [
+        "ai",
+        "governance",
+        "saas",
+        "identity"
+      ]
+    },
+    {
+      "id": "F-SVC-01",
+      "employer": "northwind",
+      "area": "service",
+      "verb_level": "executed",
+      "text": "Resolved ~900 Jira Service Management tickets with a 3.9-hour median and met the 80% first-response SLA target.",
+      "text_es": "~900 tickets resueltos en Jira Service Management con una mediana de 3,9 horas y objetivo de SLA de primera respuesta del 80% cumplido.",
+      "tags": [
+        "service desk",
+        "itsm",
+        "sla",
+        "jsm"
+      ]
+    },
+    {
+      "id": "F-SVC-02",
+      "employer": "northwind",
+      "area": "service",
+      "verb_level": "executed",
+      "text": "Ran 40 onboardings end to end.",
+      "text_es": "40 incorporaciones gestionadas de principio a fin.",
+      "tags": [
+        "onboarding",
+        "jml"
+      ]
+    },
+    {
+      "id": "F-SUP-01",
+      "employer": "contoso",
+      "area": "support",
+      "verb_level": "executed",
+      "text": "At Contoso Services (2019–2023): first- and second-line support for staff on Windows and Office 365, including account administration with PowerShell.",
+      "text_es": "En Contoso Services (2019–2023): soporte de primer y segundo nivel en Windows y Office 365, incluida la administración de cuentas con PowerShell.",
+      "tags": [
+        "support",
+        "powershell",
+        "windows",
+        "office 365"
+      ]
+    },
+    {
+      "id": "F-SKILL-MAC",
+      "employer": null,
+      "area": "skills",
+      "verb_level": "executed",
+      "text": "macOS endpoint skills: Iru (formerly Kandji) MDM, Jamf-comparable macOS management, Apple Business Manager, automated enrollment, custom scripts.",
+      "tags": [
+        "skills",
+        "macos",
+        "mdm"
+      ]
+    },
+    {
+      "id": "F-SKILL-SAAS",
+      "employer": null,
+      "area": "skills",
+      "verb_level": "executed",
+      "text": "SaaS administration skills: Google Workspace, Jira Service Management, Jira, Confluence, Slack.",
+      "tags": [
+        "skills",
+        "saas",
+        "google workspace",
+        "atlassian"
+      ]
+    }
+  ],
+  "skills_verified": [
+    "Microsoft Intune",
+    "Windows Autopilot",
+    "Windows LAPS",
+    "Iru",
+    "Apple Business Manager",
+    "Okta",
+    "Entra ID",
+    "SAML",
+    "SCIM",
+    "SSO",
+    "MFA",
+    "Bitdefender GravityZone",
+    "Microsoft Defender",
+    "ISO 27001",
+    "EDR",
+    "Google Workspace",
+    "Microsoft 365",
+    "Jira Service Management",
+    "Jira",
+    "Confluence",
+    "Slack",
+    "PowerShell",
+    "zsh",
+    "Linux",
+    "macOS"
+  ],
+  "phrasing_rules": {
+    "Jamf": "Jamf-comparable macOS management (Iru/Kandji); never hands-on Jamf"
+  },
+  "never_mention": {
+    "names": [
+      "Sam",
+      "Robin",
+      "Kai"
+    ],
+    "phrases": [
+      "health",
+      "medical",
+      "illness",
+      "sick leave",
+      "burnout",
+      "salud",
+      "enfermedad",
+      "baja médica"
+    ]
+  },
+  "fixed_lines": {
+    "career_break": "Career break for personal reasons, now resolved, followed by a job search.",
+    "career_break_es": "Pausa profesional por motivos personales, ya resueltos, seguida de una búsqueda de empleo."
+  },
+  "qa_bank": [
+    {
+      "key": "work_authorization_eu",
+      "kind": "yes_no",
+      "answer": "Yes",
+      "answer_es": "Sí",
+      "examples": [
+        "Are you authorised to work in the EU?",
+        "Are you legally authorized to work in Spain?",
+        "¿Tienes permiso de trabajo en la UE?"
+      ]
+    },
+    {
+      "key": "needs_sponsorship",
+      "kind": "yes_no",
+      "answer": "No",
+      "answer_es": "No",
+      "examples": [
+        "Will you now or in the future require visa sponsorship?",
+        "¿Necesitas patrocinio de visado?"
+      ]
+    },
+    {
+      "key": "relocate",
+      "kind": "yes_no",
+      "answer": "No",
+      "answer_es": "No",
+      "examples": [
+        "Are you willing to relocate?",
+        "¿Estarías dispuesto a cambiar de residencia?"
+      ]
+    },
+    {
+      "key": "current_location",
+      "kind": "free_text",
+      "answer": "Barcelona, Spain",
+      "answer_es": "Barcelona, España",
+      "examples": [
+        "Where are you currently located?",
+        "Current city",
+        "Ciudad de residencia"
+      ]
+    },
+    {
+      "key": "years_it",
+      "kind": "number",
+      "answer": "6",
+      "answer_es": "6",
+      "examples": [
+        "How many years of IT experience do you have?",
+        "Años de experiencia"
+      ]
+    },
+    {
+      "key": "linkedin_url",
+      "kind": "url",
+      "answer": "https://www.linkedin.com/in/alex-example/",
+      "answer_es": "https://www.linkedin.com/in/alex-example/",
+      "examples": [
+        "LinkedIn profile",
+        "LinkedIn URL"
+      ]
+    },
+    {
+      "key": "salary_expectation_eur",
+      "kind": "jean_only",
+      "answer": "",
+      "answer_es": "",
+      "examples": [
+        "What are your salary expectations?",
+        "¿Cuál es tu expectativa salarial?"
+      ]
+    },
+    {
+      "key": "notice_period",
+      "kind": "jean_only",
+      "answer": "",
+      "answer_es": "",
+      "examples": [
+        "What is your notice period?",
+        "When could you start?"
+      ]
+    },
+    {
+      "key": "how_did_you_hear",
+      "kind": "free_text",
+      "answer": "Job board",
+      "answer_es": "Portal de empleo",
+      "examples": [
+        "How did you hear about us?"
+      ]
+    }
+  ]
+}
