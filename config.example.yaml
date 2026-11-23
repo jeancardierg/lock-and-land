@@ -214,7 +214,13 @@ review:
   public_host: ""            # host name used in notification links, if different
 
 notify:
-  review_batch: 5            # Windows toast every 5 letters ready
+  review_batch: 5            # "letters ready" alert every 5 letters
+  # Set on Configuration -> Notifications. Per alert and channel: instant | hourly | daily | off
+  # (alerts: strong_jobs, letters_ready, waiting, recruiter, problems, daily_summary)
+  events: {}
+  strong_score: 70           # "strong match" = score at or above this
+  digest_time: "09:00"       # when daily digests and the daily summary are sent
+  quiet_hours: {enabled: false, start: "22:00", end: "08:00"}   # nothing is sent; alerts wait until the end
   telegram:                  # optional phone alerts: short notices only, never letter text
     enabled: false           # set up on the Configuration page: save the bot token (kept in the OS keychain),
     chat_id: ""              # press Start in your bot, then "Find my chat" fills this and turns alerts on

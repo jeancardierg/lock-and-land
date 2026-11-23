@@ -122,19 +122,80 @@ def recruiters_poll():
 _notified: dict = {}
 
 
+def _since(days: int) -> str:
+    from datetime import datetime, timedelta, timezone
+    return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat(timespec="seconds")
+
+
+def _summary(db) -> str:
+    """Daily summary text: counts only, no letter text."""
+    one = lambda q, *a: db.conn.execute(q, a).fetchone()[0]
+    new = one("SELECT count(*) FROM jobs WHERE fetched_at >= ?", _since(1))
+    rev = db.count_in_state("needs_review")
+    hum = db.count_in_state("needs_human", "awaiting_click")
+    try:
+        rec = one("SELECT count(*) FROM recruiter_msgs WHERE is_recruiter=1 AND status IN ('new','drafted')")
+    except Exception:
+        rec = 0
+    return (f"{new} new jobs in the last 24 h. {rev} letters to review, {hum} applications waiting for you, "
+            f"{rec} recruiter messages to answer.")
+
+
 @main.periodic_task(crontab(minute="*/5"))
 def notify_tick():
+    """Every 5 min: find what is new, hand it to notify.send (which applies the Notifications settings), then
+    send whatever is due (hourly batch, daily digest, end of quiet hours). What was already announced is kept in
+    data/notify_state.json, so a restart does not repeat old alerts."""
     from . import notify
     cfg, db = _ctx()
+    p = notify.prefs(cfg)
+    st = notify.state()
+    first = "seeded" not in st
     n_review = db.count_in_state("needs_review")
     n_human = db.count_in_state("needs_human", "awaiting_click")
-    every = (cfg.get("notify") or {}).get("review_batch", 5)
-    if n_review >= every and n_review // every > _notified.get("review", 0) // every:
-        notify.send(cfg, "Lock & Land: applications to review", f"{n_review} letters are ready (about 10 s each).")
-    if n_human > _notified.get("human", 0):
-        notify.send(cfg, "Lock & Land: your turn", f"{n_human} application(s) are waiting for you.",
-                    "/#waiting")
-    _notified.update(review=n_review, human=n_human)
+    every = max(1, int((cfg.get("notify") or {}).get("review_batch", 5) or 5))
+    if not first and n_review >= every and n_review // every > st.get("review", 0) // every:
+        notify.send(cfg, "Lock & Land: letters to review", f"{n_review} letters are ready (about 10 s each).",
+                    event="letters_ready")
+    if not first and n_human > st.get("human", 0):
+        notify.send(cfg, "Lock & Land: your turn", f"{n_human} application(s) are waiting for you.", "/#waiting",
+                    event="waiting")
+    st.update(review=n_review, human=n_human)
+
+    # strong matches: scored jobs from the last 3 days at or above the score, each announced once
+    seen = set(st.get("jobs", []))
+    rows = db.conn.execute("SELECT id, title, company, score FROM jobs WHERE score >= ? AND fetched_at >= ? "
+                           "ORDER BY score DESC", (p["strong_score"], _since(3))).fetchall()
+    fresh = [r for r in rows if r["id"] not in seen]
+    if fresh and not first:
+        lines = [f"{r['score']} · {r['title']}" + (f", {r['company']}" if r["company"] else "") for r in fresh[:5]]
+        more = f"\n…and {len(fresh) - 5} more" if len(fresh) > 5 else ""
+        notify.send(cfg, f"Lock & Land: {len(fresh)} strong match{'es' if len(fresh) > 1 else ''}",
+                    "\n".join(lines) + more, event="strong_jobs")
+    st["jobs"] = (list(seen) + [r["id"] for r in fresh])[-3000:]
+
+    # recruiter messages, once each, after the AI has decided they are from a recruiter
+    try:
+        last = int(st.get("rec_id", 0))
+        new_rec = []
+        for r in db.conn.execute("SELECT id, sender_name, subject, is_recruiter FROM recruiter_msgs WHERE id > ? "
+                                 "ORDER BY id", (last,)).fetchall():
+            if r["is_recruiter"] is None:
+                break
+            last = r["id"]
+            if r["is_recruiter"]:
+                new_rec.append(r)
+        if new_rec and not first:
+            notify.send(cfg, f"Lock & Land: {len(new_rec)} recruiter message{'s' if len(new_rec) > 1 else ''}",
+                        "\n".join(f"{r['sender_name'] or 'Recruiter'}: {r['subject'] or ''}"[:120]
+                                  for r in new_rec[:5]), event="recruiter")
+        st["rec_id"] = last
+    except Exception as e:
+        log.info("notify: recruiter check skipped: %s", e)
+
+    st["seeded"] = True
+    notify.save_state({**notify.state(), **st})
+    return notify.flush(cfg, summary=lambda: _summary(db))
 
 
 # ---------------- gpu queue ----------------
@@ -226,7 +287,8 @@ def db_backup():
     h = out.get("health") or {}
     if h.get("ok") is False and _notified.get("db") != h.get("detail"):
         notify.send(load_config(), "Lock & Land: database problem",
-                    "The daily check found a problem. Open Configuration to restore a backup.", "/connections")
+                    "The daily check found a problem. Open Configuration to restore a backup.", "/connections",
+                    event="problems")
         _notified["db"] = h.get("detail")
     return out
 
@@ -243,7 +305,7 @@ def auth_check():
                 "jooble": "Jooble key missing",
                 "import": "import your old data"}
         notify.send(cfg, "Lock & Land: sign-in needed", "; ".join(what.get(n, n) for n in new) + ". Open Configuration.",
-                    "/connections")
+                    "/connections", event="problems")
     _notified["auth"] = need
     return {"needs": need}
 

@@ -11,7 +11,7 @@ import json
 import logging
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 
@@ -175,14 +175,168 @@ def telegram_find_chat() -> dict:
                       "then press Find my chat again within a few minutes."}
 
 
+# ---------------- what to send, where, and how often ----------------
+
+# key: (label shown on Configuration, desktop default, Telegram default)
+EVENTS = {
+    "strong_jobs": ("Strong new job matches", "instant", "instant"),
+    "letters_ready": ("Letters ready to review", "instant", "instant"),
+    "waiting": ("Applications waiting for you", "instant", "instant"),
+    "recruiter": ("New recruiter messages", "instant", "instant"),
+    "problems": ("Problems: sign-in expired, database check", "instant", "instant"),
+    "daily_summary": ("Daily summary (counts of everything)", "off", "daily"),
+}
+MODES = ("instant", "hourly", "daily", "off")
+CHANNELS = ("desktop", "telegram")
+QUEUE = "notify_queue.json"
+STATE = "notify_state.json"
+
+
+def _hhmm(v, default: str) -> str:
+    v = str(v or default).strip()
+    m = re.fullmatch(r"([01]?\d|2[0-3]):([0-5]\d)", v)
+    return f"{int(m.group(1)):02d}:{m.group(2)}" if m else default
+
+
+def prefs(cfg: dict) -> dict:
+    """notify.events / quiet_hours / digest_time / strong_score from config.yaml, with defaults filled in."""
+    n = cfg.get("notify") or {}
+    ev = n.get("events") or {}
+    events = {}
+    for k, (label, d_desk, d_tg) in EVENTS.items():
+        e = ev.get(k) if isinstance(ev.get(k), dict) else {}
+        events[k] = {"label": label}
+        for ch, d in (("desktop", d_desk), ("telegram", d_tg)):
+            m = e.get(ch, d)
+            m = "instant" if m is True else "off" if m is False else m
+            if m not in MODES or (k == "daily_summary" and m not in ("daily", "off")):
+                m = d
+            events[k][ch] = m
+    q = n.get("quiet_hours") if isinstance(n.get("quiet_hours"), dict) else {}
+    th = (cfg.get("thresholds") or {}).get("draft_score", 70)
+    try:
+        strong = max(0, min(100, int(n.get("strong_score", th))))
+    except (TypeError, ValueError):
+        strong = th
+    return {"events": events, "strong_score": strong, "digest_time": _hhmm(n.get("digest_time"), "09:00"),
+            "quiet_hours": {"enabled": bool(q.get("enabled")), "start": _hhmm(q.get("start"), "22:00"),
+                            "end": _hhmm(q.get("end"), "08:00")}}
+
+
+def in_quiet(p: dict, at: datetime | None = None) -> bool:
+    q = p["quiet_hours"]
+    if not q["enabled"] or q["start"] == q["end"]:
+        return False
+    t = (at or datetime.now()).strftime("%H:%M")
+    return q["start"] <= t < q["end"] if q["start"] < q["end"] else (t >= q["start"] or t < q["end"])
+
+
+def _load(name: str, default):
+    try:
+        from .config import DATA
+        return json.loads((DATA / name).read_text(encoding="utf-8"))
+    except Exception:
+        return default
+
+
+def _save(name: str, data) -> None:
+    from .config import DATA
+    DATA.mkdir(parents=True, exist_ok=True)
+    tmp = DATA / (name + ".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(DATA / name)
+
+
+def state() -> dict:
+    return _load(STATE, {})
+
+
+def save_state(st: dict) -> None:
+    _save(STATE, st)
+
+
 def review_url(cfg: dict, path: str = "/") -> str:
     r = cfg.get("review") or {}
     return f"http://{r.get('public_host') or r.get('host', '127.0.0.1')}:{r.get('port', 8502)}{path}"
 
 
-def send(cfg: dict, title: str, body: str, path: str = "/") -> None:
-    """The desktop app has no web address (no server), so the toast just tells you; open the app from the tray.
-    A link goes into Telegram only if you run the review page yourself and set review.public_host."""
-    toast(title, body)
+def _deliver(cfg: dict, channel: str, title: str, body: str, path: str = "/") -> bool:
+    if channel == "desktop":
+        return toast(title, body)
     url = review_url(cfg, path) if (cfg.get("review") or {}).get("public_host") else ""
-    telegram(cfg, f"{title}\n{body}" + (f"\n{url}" if url else ""))
+    return telegram(cfg, f"{title}\n{body}" + (f"\n{url}" if url else ""))
+
+
+def send(cfg: dict, title: str, body: str, path: str = "/", event: str | None = None) -> None:
+    """Send now, or queue for the hourly batch / daily digest / end of quiet hours, per channel, following the
+    Notifications settings. event=None (old callers) means instant on both channels."""
+    p = prefs(cfg)
+    modes = p["events"].get(event) if event else {"desktop": "instant", "telegram": "instant"}
+    quiet = in_quiet(p)
+    queued = []
+    for ch in CHANNELS:
+        m = (modes or {}).get(ch, "instant")
+        if m == "off":
+            continue
+        if m == "instant" and not quiet:
+            try:
+                _deliver(cfg, ch, title, body, path)
+            except Exception as e:
+                log.warning("notify %s failed: %s", ch, _redact(e))
+            continue
+        queued.append({"event": event or "", "channel": ch, "mode": m, "title": title, "body": body,
+                       "at": datetime.now().isoformat(timespec="seconds")})
+    if queued:
+        q = _load(QUEUE, [])
+        q.extend(queued)
+        _save(QUEUE, q[-500:])
+
+
+def flush(cfg: dict, now: datetime | None = None, summary=None) -> dict:
+    """Called every 5 minutes: outside quiet hours, send what is due as one message per channel.
+    instant (held by quiet hours): now; hourly: once an hour; daily: at digest_time. summary() builds the daily
+    summary text when it is due."""
+    now = now or datetime.now()
+    p = prefs(cfg)
+    if in_quiet(p, now):
+        return {"quiet": True}
+    st = state()
+    today = now.strftime("%Y-%m-%d")
+    hourly_due = now.isoformat(timespec="seconds") >= st.get("next_hourly", "")
+    daily_due = now.strftime("%H:%M") >= p["digest_time"] and st.get("digest_day") != today
+    q = _load(QUEUE, [])
+    if daily_due and summary is not None:
+        text = None
+        for ch in CHANNELS:
+            if p["events"]["daily_summary"][ch] == "daily":
+                text = text if text is not None else summary()
+                if text:
+                    q.append({"event": "daily_summary", "channel": ch, "mode": "daily",
+                              "title": "Daily summary", "body": text, "at": now.isoformat(timespec="seconds")})
+    due = [i for i in q if i["mode"] == "instant" or (i["mode"] == "hourly" and hourly_due)
+           or (i["mode"] == "daily" and daily_due)]
+    sent = {}
+    for ch in CHANNELS:
+        items = [i for i in due if i["channel"] == ch]
+        if not items:
+            continue
+        if len(items) == 1:
+            title, body = items[0]["title"], items[0]["body"]
+        else:
+            title = f"Lock & Land: {len(items)} updates"
+            body = "\n".join(f"- {i['title'].replace('Lock & Land: ', '')}: {i['body']}" for i in items)
+        try:
+            _deliver(cfg, ch, title, body[:3500] if ch == "telegram" else body[:250])
+        except Exception as e:
+            log.warning("notify %s failed: %s", ch, _redact(e))
+        sent[ch] = len(items)
+    rest = [i for i in q if i not in due]
+    if q or rest:
+        _save(QUEUE, rest)
+    if hourly_due:
+        st["next_hourly"] = (now.replace(minute=0, second=0, microsecond=0)
+                             + timedelta(hours=1)).isoformat(timespec="seconds")
+    if daily_due:
+        st["digest_day"] = today
+    save_state(st)
+    return {"sent": sent, "waiting": len(rest)}

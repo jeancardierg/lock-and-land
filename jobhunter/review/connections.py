@@ -70,6 +70,24 @@ def set_secret(body: dict = Body(...)) -> dict:
     return out
 
 
+@router.post("/api/connections/notify")
+def notify_prefs(body: dict = Body(...)) -> dict:
+    try:
+        return C.set_notify_prefs(body)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@router.post("/api/connections/notify/test")
+def notify_test() -> dict:
+    """One desktop notification and (if set up) one Telegram message, right now, ignoring the settings."""
+    from .. import notify
+    cfg = load_config()
+    desk = notify.toast("Lock & Land test", "Desktop notifications work.")
+    tg = notify.telegram(cfg, "Lock & Land test message: Telegram alerts work.", force=True)
+    return {"ok": True, "desktop": desk, "telegram": tg}
+
+
 @router.post("/api/connections/telegram/connect")
 def telegram_connect() -> dict:
     return C.telegram_connect()

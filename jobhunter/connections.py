@@ -209,6 +209,69 @@ def _edit_config(fn) -> None:
     path.write_text(yaml.safe_dump(raw, allow_unicode=True, sort_keys=False, width=110), encoding="utf-8")
 
 
+# ---------------- Notifications: which events, which channel, how often ----------------
+
+def notify_prefs(cfg: dict | None = None) -> dict:
+    from . import notify
+    p = notify.prefs(cfg if cfg is not None else load_config())
+    p["modes"] = list(notify.MODES)
+    return p
+
+
+def set_notify_prefs(body: dict) -> dict:
+    """Save the Notifications card. Unknown events/modes are refused, times must be HH:MM."""
+    import re
+    from . import notify
+    events = {}
+    for k, v in (body.get("events") or {}).items():
+        if k not in notify.EVENTS or not isinstance(v, dict):
+            raise ValueError(f"Unknown alert {k!r}")
+        events[k] = {}
+        for ch in notify.CHANNELS:
+            m = v.get(ch)
+            if m is None:
+                continue
+            allowed = ("daily", "off") if k == "daily_summary" else notify.MODES
+            if m not in allowed:
+                raise ValueError(f"{notify.EVENTS[k][0]}: choose one of {', '.join(allowed)}")
+            events[k][ch] = m
+    hhmm = re.compile(r"([01]\d|2[0-3]):[0-5]\d")
+    q = body.get("quiet_hours") or {}
+    for t in (body.get("digest_time"), q.get("start"), q.get("end")):
+        if t is not None and not hhmm.fullmatch(str(t)):
+            raise ValueError("Times look like 08:00 or 22:30")
+    score = body.get("strong_score")
+    if score is not None:
+        try:
+            score = int(score)
+        except (TypeError, ValueError):
+            raise ValueError("The score is a number from 0 to 100")
+        if not 0 <= score <= 100:
+            raise ValueError("The score is a number from 0 to 100")
+
+    def fn(raw):
+        if not isinstance(raw.get("notify"), dict):
+            raw["notify"] = {}
+        n = raw["notify"]
+        if events:
+            cur = n.get("events") if isinstance(n.get("events"), dict) else {}
+            for k, v in events.items():
+                cur[k] = {**(cur.get(k) if isinstance(cur.get(k), dict) else {}), **v}
+            n["events"] = cur
+        if body.get("digest_time") is not None:
+            n["digest_time"] = body["digest_time"]
+        if score is not None:
+            n["strong_score"] = score
+        if q:
+            cur = n.get("quiet_hours") if isinstance(n.get("quiet_hours"), dict) else {}
+            for key in ("enabled", "start", "end"):
+                if key in q:
+                    cur[key] = bool(q[key]) if key == "enabled" else q[key]
+            n["quiet_hours"] = cur
+    _edit_config(fn)
+    return {"ok": True, "notify": notify_prefs()}
+
+
 # ---------------- Telegram alerts ----------------
 
 def telegram_state(tg: dict | None = None) -> dict:
@@ -744,7 +807,7 @@ def status(refresh: bool = False) -> dict:
         setup_needed.insert(0, "criteria")
     return {
         "home": str(HOME), "keychain": secrets.backend_name(), "gmail": gm, "sources": sources,
-        "telegram": telegram_state(tg),
+        "telegram": telegram_state(tg), "notify": notify_prefs(cfg),
         "database": db, "disk": disk_encryption(refresh=refresh), "ollama": ollama_state(cfg),
         "legacy": legacy_candidates() if not (DATA / "jobhunter.db").exists() else [],
         "legacy_secret_files": [p for p in legacy_candidates_with_secrets()],
