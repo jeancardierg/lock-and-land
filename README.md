@@ -59,6 +59,10 @@ If your antivirus asks about the file, choose **Allow**.
    **Open Anyway**. Enter your Mac password if asked.
 4. Open Lock & Land again and click **Open**. From now on it opens normally. Its icon sits in the menu bar.
 
+On macOS 15 Sequoia and later, right-click → **Open** no longer skips this check, so use **Open Anyway** as above.
+The **Open Anyway** button only shows for about an hour after macOS blocks the app; if you don't see it, do step 2
+again.
+
 If macOS says the app **is damaged**, open **Terminal** (Applications → Utilities), run this line, then try step 2 again:
 
 ```bash

@@ -2,7 +2,8 @@
 # Builds dist/LockAndLand-<version>.dmg (the app is "Lock & Land.app"; internal name jobhunter) on a Mac (Apple Silicon or Intel builds for that architecture only).
 #   bash packaging/build_mac.sh
 # Needs: Python 3.11 (python.org installer or `brew install python@3.11`).
-# Not signed/notarized: first launch needs right-click > Open (or: xattr -dr com.apple.quarantine "/Applications/Lock & Land.app").
+# Not signed/notarized: first launch needs System Settings > Privacy & Security > Open Anyway (right-click > Open no
+# longer works on macOS 15+). If macOS says the app "is damaged": xattr -cr "/Applications/Lock & Land.app". See README.
 # To sign: set CODESIGN_ID="Developer ID Application: ..." (Apple Developer account) and notarize with notarytool.
 set -euo pipefail
 VERSION="${1:-0.4.0}"
