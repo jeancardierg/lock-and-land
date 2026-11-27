@@ -19,7 +19,7 @@ from .. import accounts, fit, gmail, grounding, master, sqldb
 from ..config import attachment_problem, cv_attachment, load_config
 from ..db import DB
 from ..routing import route
-from ..states import IllegalTransition
+from ..states import TRACK_STAGES, IllegalTransition
 
 log = logging.getLogger(__name__)
 app = FastAPI(title="Lock & Land", docs_url=None, redoc_url=None)
@@ -405,6 +405,36 @@ def submitted(job_id: int) -> dict:
     except IllegalTransition as e:
         raise HTTPException(409, str(e))
     return {"done": "Marked as applied. It's in the Tracker now."}
+
+
+@app.get("/api/tracker")
+def tracker() -> dict:
+    """Every job you applied to, last change first, with its Tracker stage."""
+    cfg, db = load_config(), _db()
+    rows = db.conn.execute(
+        "SELECT j.*, (SELECT MAX(e.at) FROM job_events e WHERE e.job_id=j.id) AS changed_at FROM jobs j "
+        "WHERE j.state='submitted' ORDER BY changed_at IS NULL, changed_at DESC, j.id DESC").fetchall()
+    out = []
+    for j in rows:
+        r = list_row(j, cfg)
+        r["track"] = r["stage"] = j["status"] if j["status"] in TRACK_STAGES else "applied"
+        r["changed"] = (j["changed_at"] or j["updated_at"] or "")[:10]
+        out.append(r)
+    counts = {s: sum(1 for r in out if r["track"] == s) for s in TRACK_STAGES}
+    return {"jobs": out, "stages": TRACK_STAGES, "counts": counts}
+
+
+@app.post("/api/jobs/{job_id}/stage")
+def stage(job_id: int, body: dict = Body(...)) -> dict:
+    db = _db()
+    _job(db, job_id)
+    to = str(body.get("stage") or "")
+    if to not in TRACK_STAGES:
+        raise HTTPException(400, f"Unknown stage. Pick one of: {', '.join(TRACK_STAGES)}.")
+    prev = db.set_track_stage(job_id, to)
+    if prev is None:
+        raise HTTPException(409, "Only jobs you applied to have a Tracker stage. Press I applied first.")
+    return {"done": "No change." if prev == to else f"Stage set to {to}."}
 
 
 @app.get("/api/jobs/{job_id}/handoff")

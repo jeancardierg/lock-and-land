@@ -1,3 +1,13 @@
+# Tracker is back, in the app window (27 Nov 2026, v0.4.1)
+
+- The Tracker lived in the old Streamlit dashboard and went away with it when the local server was removed on 23 Nov.
+  Nothing was lost: the stages stayed in the database. It is now a **Tracker** tab in the window.
+- It lists every job you applied to (sent by email or marked with I applied), last change first: stage, title,
+  company, location, the date it last changed and a link to the ad. Click a row for the same details as All jobs.
+- Change the stage (Applied, Interview, Offer, Rejected, Withdrawn) from its menu; it saves straight away and is
+  logged in the job's history. Stages set in the old dashboard show up as they were.
+- A stage change only ever touches jobs you applied to, and doesn't count toward the daily send limit.
+
 # A CV tailored to each ad, and adding a job by pasting its ad (23 Nov 2026)
 
 - **Tailor CV** on a letter card (and on the Waiting tab) builds a one-page ATS CV for that ad, as PDF and Word, in

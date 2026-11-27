@@ -233,8 +233,28 @@ class DB:
         return self.conn.execute("SELECT * FROM form_runs WHERE job_id=? ORDER BY id DESC", (job_id,)).fetchall()
 
     def submitted_today(self) -> int:
+        # a Tracker stage change is logged as submitted -> submitted: not a new application
         return self.conn.execute("SELECT count(*) FROM job_events WHERE to_state='submitted' "
+                                 "AND COALESCE(from_state, '') != 'submitted' "
                                  "AND date(at)=date('now')").fetchone()[0]
+
+    def set_track_stage(self, job_id: int, stage: str, actor: str = "jean") -> str | None:
+        """Change an applied job's Tracker stage, with a job_events row, in one transaction. Returns the previous
+        stage, or None if the job isn't one you applied to (state 'submitted')."""
+        from .states import TRACK_STAGES
+        if stage not in TRACK_STAGES:
+            raise ValueError(f"unknown stage {stage}")
+        with self.conn:
+            row = self.conn.execute("SELECT status FROM jobs WHERE id=? AND state='submitted'", (job_id,)).fetchone()
+            if row is None:
+                return None
+            prev = row[0] if row[0] in TRACK_STAGES else "applied"
+            if prev != stage:
+                self.conn.execute("UPDATE jobs SET status=?, updated_at=? WHERE id=? AND state='submitted'",
+                                  (stage, now(), job_id))
+                self.conn.execute("INSERT INTO job_events(job_id, from_state, to_state, actor, reason) "
+                                  "VALUES (?, 'submitted', 'submitted', ?, ?)", (job_id, actor, f"stage: {prev} -> {stage}"))
+        return prev
 
     # ---------- recruiters ----------
     def upsert_msg(self, m: dict[str, Any]) -> bool:

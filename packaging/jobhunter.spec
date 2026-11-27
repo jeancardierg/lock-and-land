@@ -7,7 +7,7 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 ROOT = Path(SPECPATH).parent
 ASSETS = ROOT / "build" / "assets"
-APP_VERSION = "0.4.0"
+APP_VERSION = "0.4.1"
 
 datas = [
     (str(ROOT / "config.example.yaml"), "."),

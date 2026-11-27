@@ -6,7 +6,7 @@
 # longer works on macOS 15+). If macOS says the app "is damaged": xattr -cr "/Applications/Lock & Land.app". See README.
 # To sign: set CODESIGN_ID="Developer ID Application: ..." (Apple Developer account) and notarize with notarytool.
 set -euo pipefail
-VERSION="${1:-0.4.0}"
+VERSION="${1:-0.4.1}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 APP="dist/Lock & Land.app"
