@@ -1,6 +1,6 @@
 ; Inno Setup script: per-user install, no admin rights. Built by packaging\build_windows.ps1.
 #ifndef AppVersion
-  #define AppVersion "0.4.0"
+  #define AppVersion "0.4.1"
 #endif
 
 [Setup]

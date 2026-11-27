@@ -1,7 +1,7 @@
 # Builds dist\LockAndLand-setup-<version>.exe on Windows. Run from anywhere:
 #   powershell -ExecutionPolicy Bypass -File packaging\build_windows.ps1
 # Needs: Python 3.11 (py launcher) and Inno Setup 6 (winget install JRSoftware.InnoSetup).
-param([string]$Version = "0.4.0", [switch]$SkipTests)
+param([string]$Version = "0.4.1", [switch]$SkipTests)
 $ErrorActionPreference = "Stop"
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root

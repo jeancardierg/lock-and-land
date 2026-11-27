@@ -44,6 +44,11 @@ FROM_LEGACY = {"new": "queued", "filtered": "filtered", "relocation": "relocatio
                "withdrawn": "submitted", "skipped": "rejected", "error": "failed"}
 
 
+# Tracker stages: where an application stands after you applied. Kept in the `status` column; `state` stays
+# 'submitted' so the pipeline never touches the job again.
+TRACK_STAGES = ["applied", "interview", "offer", "rejected", "withdrawn"]
+
+
 class IllegalTransition(RuntimeError):
     pass
 
